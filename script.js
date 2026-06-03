@@ -1,5 +1,5 @@
 // ============================================
-// VIOLA STORE - MAIN PAGE (With Dynamic Navbar & Category Images)
+// VIOLA STORE - MAIN PAGE (FULLY FIXED)
 // ============================================
 
 // Firebase Configuration
@@ -23,8 +23,11 @@ let products = [];
 let categories = [];
 let ads = [];
 let cart = [];
+let coupons = [];
+let appliedCoupon = null;
 let currentFilter = 'all';
 let displayedCount = 8;
+let realtimeListeners = {};
 
 // DOM Elements
 const productsGrid = document.getElementById('productsGrid');
@@ -59,27 +62,99 @@ const closeContactModal = document.getElementById('closeContactModal');
 const filterTabsContainer = document.getElementById('filterTabs');
 const navList = document.getElementById('navList');
 
+// Helper Functions
+function formatPrice(price) {
+    return parseFloat(price).toFixed(2);
+}
+
+// إخفاء رسائل Console الخاصة بالكوبونات فقط (لأسباب أمنية)
+const originalConsoleLog = console.log;
+console.log = function(...args) {
+    const message = args.join(' ');
+    if (message.includes('الكوبون') || message.includes('coupon') || message.includes('كود')) {
+        return;
+    }
+    originalConsoleLog.apply(console, args);
+};
+
 // ============================================
-// Render Dynamic Navbar from Firebase Categories (with images)
+// Realtime Listeners for Auto-Update
+// ============================================
+function setupRealtimeListeners() {
+    // الاستماع للتغييرات في المنتجات
+    if (realtimeListeners.products) db.ref('products').off('value', realtimeListeners.products);
+    realtimeListeners.products = db.ref('products').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const productsData = snapshot.val();
+            products = Object.keys(productsData).map(key => ({ id: key, ...productsData[key] }));
+            products = products.filter(p => p.active !== false);
+            renderProducts(currentFilter, searchInput ? searchInput.value : '');
+        }
+    });
+    
+    // الاستماع للتغييرات في الفئات
+    if (realtimeListeners.categories) db.ref('categories').off('value', realtimeListeners.categories);
+    realtimeListeners.categories = db.ref('categories').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const categoriesData = snapshot.val();
+            categories = Object.keys(categoriesData).map(key => ({ id: key, ...categoriesData[key] }));
+            categories = categories.filter(c => c.active !== false);
+            categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+            renderFilterTabs();
+            renderNavbar();
+        }
+    });
+    
+    // الاستماع للتغييرات في الإعلانات
+    if (realtimeListeners.ads) db.ref('ads').off('value', realtimeListeners.ads);
+    realtimeListeners.ads = db.ref('ads').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const adsData = snapshot.val();
+            ads = Object.keys(adsData).map(key => ({ id: key, ...adsData[key] }));
+            ads = ads.filter(a => a.active !== false);
+            renderHeroSlider();
+        }
+    });
+    
+    // الاستماع للتغييرات في الكوبونات (بدون طباعة في الكونسول)
+    if (realtimeListeners.coupons) db.ref('coupons').off('value', realtimeListeners.coupons);
+    realtimeListeners.coupons = db.ref('coupons').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const couponsData = snapshot.val();
+            coupons = Object.keys(couponsData).map(key => ({ id: key, ...couponsData[key] }));
+            coupons = coupons.filter(c => c.active !== false);
+            if (appliedCoupon) {
+                const updatedCoupon = coupons.find(c => c.id === appliedCoupon.id);
+                if (updatedCoupon) {
+                    appliedCoupon = { ...appliedCoupon, usedCount: updatedCoupon.usedCount };
+                    saveCouponToLocal();
+                    updateCartUI();
+                } else {
+                    appliedCoupon = null;
+                    saveCouponToLocal();
+                    updateCartUI();
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// Render Dynamic Navbar
 // ============================================
 function renderNavbar() {
     if (!navList) return;
-    
-    // Keep home link
     let homeLi = navList.querySelector('li[data-category="all"]');
     if (!homeLi) {
         navList.innerHTML = '<li class="nav-item active" data-category="all"><a href="#"><i class="fas fa-home"></i> الرئيسية</a></li>';
         homeLi = navList.querySelector('li[data-category="all"]');
     }
-    
-    // Add categories from Firebase
     categories.forEach(cat => {
         const existingItem = navList.querySelector(`li[data-category="${cat.id}"]`);
         if (!existingItem && cat.active !== false) {
             const li = document.createElement('li');
             li.className = 'nav-item';
             li.setAttribute('data-category', cat.id);
-            // عرض الصورة في الشريط
             if (cat.image && cat.image !== '') {
                 li.innerHTML = `<a href="category.html?cat=${cat.id}"><img src="${cat.image}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; margin-left:5px;"> ${cat.name}</a>`;
             } else {
@@ -101,8 +176,6 @@ function renderNavbar() {
             }
         }
     });
-    
-    // Remove categories that no longer exist
     const items = navList.querySelectorAll('.nav-item');
     items.forEach(item => {
         const catId = item.getAttribute('data-category');
@@ -111,8 +184,6 @@ function renderNavbar() {
             if (!exists) item.remove();
         }
     });
-    
-    // Activate current category based on URL
     const urlParams = new URLSearchParams(window.location.search);
     const currentCat = urlParams.get('cat');
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -126,57 +197,51 @@ function renderNavbar() {
 }
 
 // ============================================
-// Load Data from Firebase
+// Load Data from Firebase (Initial Load)
 // ============================================
 async function loadData() {
     try {
-        const [categoriesSnap, productsSnap, adsSnap] = await Promise.all([
+        const [categoriesSnap, productsSnap, adsSnap, couponsSnap] = await Promise.all([
             db.ref('categories').once('value'),
             db.ref('products').once('value'),
-            db.ref('ads').once('value')
+            db.ref('ads').once('value'),
+            db.ref('coupons').once('value')
         ]);
         
         if (categoriesSnap.exists()) {
             const categoriesData = categoriesSnap.val();
             categories = Object.keys(categoriesData).map(key => ({ id: key, ...categoriesData[key] }));
-            console.log("✅ تم تحميل الأقسام:", categories.length);
-        } else {
-            categories = [];
         }
-        
         if (productsSnap.exists()) {
             const productsData = productsSnap.val();
             products = Object.keys(productsData).map(key => ({ id: key, ...productsData[key] }));
-            console.log("✅ تم تحميل المنتجات:", products.length);
-        } else {
-            products = [];
         }
-        
         if (adsSnap.exists()) {
             const adsData = adsSnap.val();
             ads = Object.keys(adsData).map(key => ({ id: key, ...adsData[key] }));
-            console.log("✅ تم تحميل الإعلانات:", ads.length);
-        } else {
-            ads = [];
+        }
+        if (couponsSnap.exists()) {
+            const couponsData = couponsSnap.val();
+            coupons = Object.keys(couponsData).map(key => ({ id: key, ...couponsData[key] }));
         }
         
-        // Filter active items
         categories = categories.filter(c => c.active !== false);
         products = products.filter(p => p.active !== false);
         ads = ads.filter(a => a.active !== false);
-        
-        // Sort categories
+        coupons = coupons.filter(c => c.active !== false);
         categories.sort((a, b) => (a.order || 0) - (b.order || 0));
         
-        // Render everything
         renderFilterTabs();
         renderHeroSlider();
         renderProducts();
         renderNavbar();
         updateCartUI();
         
+        // إعداد المستمعات للتحديث التلقائي بعد التحميل الأولي
+        setupRealtimeListeners();
+        
     } catch (err) {
-        console.error("❌ خطأ في تحميل البيانات:", err);
+        console.error("خطأ في تحميل البيانات:", err);
         showToast("خطأ في تحميل البيانات", true);
     }
 }
@@ -191,7 +256,6 @@ function renderFilterTabs() {
         ${categories.map(cat => `<button class="filter-tab" data-filter="${cat.id}">${cat.name}</button>`).join('')}
         <button class="filter-tab" data-filter="new">جديد</button>
     `;
-    
     document.querySelectorAll('.filter-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -210,14 +274,12 @@ function renderHeroSlider() {
     const heroSlider = document.getElementById('heroSlider');
     const heroDots = document.getElementById('heroDots');
     if (!heroSlider || !heroDots) return;
-    
     if (ads.length === 0) {
         heroSlider.innerHTML = `<div class="hero-slide active"><div class="hero-content"><span class="hero-tag">✨ مرحباً بك</span><h2>تسوقي بأحدث التصاميم</h2><p>اكتشفي أجمل المنتجات في متجر ڤيولا</p><button class="hero-btn">تسوقي الآن <i class="fas fa-arrow-left"></i></button></div><div class="hero-image"><div class="hero-img-placeholder"><i class="fas fa-female"></i></div></div></div>`;
         heroDots.innerHTML = '<span class="dot active"></span>';
         initHeroSlider();
         return;
     }
-    
     heroSlider.innerHTML = ads.map((ad, index) => `
         <div class="hero-slide ${index === 0 ? 'active' : ''}" data-ad-id="${ad.id}">
             <div class="hero-content">
@@ -229,7 +291,6 @@ function renderHeroSlider() {
             <div class="hero-image"><div class="hero-img-placeholder"><img src="${ad.image}" alt="إعلان" style="width:100%; height:100%; object-fit:cover; border-radius:50%;"></div></div>
         </div>
     `).join('');
-    
     heroDots.innerHTML = ads.map((_, index) => `<span class="dot ${index === 0 ? 'active' : ''}" data-slide="${index}"></span>`).join('');
     initHeroSlider();
 }
@@ -239,6 +300,20 @@ function renderHeroSlider() {
 // ============================================
 function saveCartToLocal() { localStorage.setItem('viola_cart', JSON.stringify(cart)); }
 function loadCartFromLocal() { const saved = localStorage.getItem('viola_cart'); if (saved) { cart = JSON.parse(saved); updateCartUI(); } }
+
+function saveCouponToLocal() { 
+    if (appliedCoupon) {
+        localStorage.setItem('viola_coupon', JSON.stringify(appliedCoupon));
+    } else {
+        localStorage.removeItem('viola_coupon');
+    }
+}
+function loadCouponFromLocal() { 
+    const saved = localStorage.getItem('viola_coupon');
+    if (saved) {
+        appliedCoupon = JSON.parse(saved);
+    }
+}
 
 function addToCart(product, selectedSize = null, selectedColor = null) {
     const existingIndex = cart.findIndex(item => item.id === product.id && item.selectedSize === selectedSize && item.selectedColor === selectedColor);
@@ -260,11 +335,117 @@ function updateQty(index, change) {
     else { saveCartToLocal(); updateCartUI(); }
 }
 
+// ============================================
+// COUPON SYSTEM
+// ============================================
+function isCouponValid(coupon, subtotal) {
+    if (!coupon) return false;
+    if (!coupon.active) return false;
+    
+    const limit = coupon.usageLimit ? parseInt(coupon.usageLimit) : null;
+    const used = coupon.usedCount ? parseInt(coupon.usedCount) : 0;
+    
+    if (limit !== null && used >= limit) return false;
+    if (coupon.expiryDate && Date.now() > coupon.expiryDate) return false;
+    if (coupon.minAmount && subtotal < coupon.minAmount) return false;
+    
+    return true;
+}
+
+function getCouponDiscount() {
+    if (!appliedCoupon) return 0;
+    
+    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
+    
+    if (!isCouponValid(appliedCoupon, subtotal)) {
+        appliedCoupon = null;
+        saveCouponToLocal();
+        return 0;
+    }
+    
+    let discount = 0;
+    const value = parseFloat(appliedCoupon.value);
+    
+    if (appliedCoupon.type === 'percentage') {
+        discount = (subtotal * value) / 100;
+    } else {
+        discount = value;
+    }
+    
+    if (discount > subtotal) discount = subtotal;
+    return discount;
+}
+
+function calculateTotals() {
+    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
+    const discount = getCouponDiscount();
+    const discountMessage = appliedCoupon ? 
+        (appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}% خصم` : `${appliedCoupon.value}$ خصم`) : '';
+    const finalTotal = subtotal - discount;
+    
+    return { subtotal, discount, discountMessage, finalTotal };
+}
+
+function applyCoupon(code) {
+    const coupon = coupons.find(c => c.code === code.toUpperCase());
+    if (!coupon) {
+        showToast('❌ كود الخصم غير صالح', true);
+        return false;
+    }
+    
+    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
+    
+    const limit = coupon.usageLimit ? parseInt(coupon.usageLimit) : null;
+    const used = coupon.usedCount ? parseInt(coupon.usedCount) : 0;
+    
+    if (limit !== null && used >= limit) {
+        showToast(`❌ تم استخدام هذا الكود ${limit} مرة`, true);
+        return false;
+    }
+    
+    if (coupon.expiryDate && Date.now() > coupon.expiryDate) {
+        showToast('❌ انتهت صلاحية الكود', true);
+        return false;
+    }
+    
+    if (coupon.minAmount && subtotal < coupon.minAmount) {
+        showToast(`❌ الحد الأدنى للطلب هو ${coupon.minAmount}$`, true);
+        return false;
+    }
+    
+    appliedCoupon = {
+        id: coupon.id,
+        code: coupon.code,
+        type: coupon.type,
+        value: coupon.value,
+        usedCount: used,
+        usageLimit: limit,
+        minAmount: coupon.minAmount,
+        expiryDate: coupon.expiryDate,
+        active: true
+    };
+    
+    saveCouponToLocal();
+    updateCartUI();
+    
+    const discountValue = coupon.type === 'percentage' ? `${coupon.value}%` : `${coupon.value}$`;
+    const remaining = limit !== null ? (limit - used) : 'غير محدود';
+    showToast(`✅ تم تطبيق كود ${coupon.code} (خصم ${discountValue}) - تبقى ${remaining} استخدام`);
+    return true;
+}
+
+function removeCoupon() {
+    appliedCoupon = null;
+    saveCouponToLocal();
+    updateCartUI();
+    showToast('تم إلغاء كود الخصم');
+}
+
 function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-    const total = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
+    const { subtotal, discount, discountMessage, finalTotal } = calculateTotals();
+    
     if (cartCount) cartCount.textContent = totalItems;
-    if (totalPrice) totalPrice.textContent = Math.round(total) + ' $';
     
     if (cart.length === 0) {
         if (cartItems) cartItems.innerHTML = '';
@@ -279,21 +460,73 @@ function updateCartUI() {
                     <div class="cart-item-img"><img src="${item.image}" alt="${item.name}"></div>
                     <div class="cart-item-details">
                         <div class="cart-item-name">${item.name}</div>
-                        ${item.selectedSize ? `<div class="cart-item-size" style="font-size:0.75rem; color:#e91e63;"><i class="fas fa-ruler"></i> المقاس: ${item.selectedSize}</div>` : ''}
-                        ${item.selectedColor ? `<div class="cart-item-color" style="font-size:0.75rem; color:#e91e63;"><i class="fas fa-palette"></i> اللون: ${item.selectedColor}</div>` : ''}
-                        <div class="cart-item-price">${item.price} $</div>
-                        <div class="cart-item-qty"><button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button><span class="qty-value">${item.qty}</span><button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button><button class="remove-item" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button></div>
+                        ${item.selectedSize ? `<div class="cart-item-size"><i class="fas fa-ruler"></i> المقاس: ${item.selectedSize}</div>` : ''}
+                        ${item.selectedColor ? `<div class="cart-item-color"><i class="fas fa-palette"></i> اللون: ${item.selectedColor}</div>` : ''}
+                        <div class="cart-item-price">${formatPrice(item.price)} $</div>
+                        <div class="cart-item-qty">
+                            <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
+                            <span class="qty-value">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
+                            <button class="remove-item" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
+        
+        const existingCouponSection = document.querySelector('.coupon-section');
+        if (existingCouponSection) existingCouponSection.remove();
+        
+        const couponSection = document.createElement('div');
+        couponSection.className = 'coupon-section';
+        if (appliedCoupon) {
+            const limit = appliedCoupon.usageLimit;
+            const used = appliedCoupon.usedCount || 0;
+            const remaining = limit !== null ? (limit - used) : 'غير محدود';
+            couponSection.innerHTML = `
+                <div class="coupon-discount" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>الخصم (${discountMessage}):</span>
+                    <span style="color:#2ed573;">- ${formatPrice(discount)} $</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:var(--primary);">✓ كود ${appliedCoupon.code} مطبق (تبقى ${remaining} استخدام)</span>
+                    <button onclick="removeCoupon()" style="background:none; border:none; color:#ff4757; cursor:pointer;">إلغاء</button>
+                </div>
+            `;
+        } else {
+            couponSection.innerHTML = `
+                <div style="font-size:0.85rem; color:var(--text-medium); margin-bottom:8px;">🎫 هل لديك كود خصم؟</div>
+                <div class="coupon-input-group" style="display:flex; gap:8px;">
+                    <input type="text" id="couponInput" placeholder="أدخل كود الخصم" style="flex:1; padding:8px 12px; border:1px solid #f8bbd9; border-radius:50px;">
+                    <button onclick="applyCoupon(document.getElementById('couponInput').value)" style="padding:8px 16px; background:linear-gradient(135deg,#e91e63,#f06292); color:white; border:none; border-radius:50px; cursor:pointer;">تطبيق</button>
+                </div>
+            `;
+        }
+        cartFooter.parentNode.insertBefore(couponSection, cartFooter);
     }
+    
+    if (totalPrice) totalPrice.textContent = formatPrice(finalTotal) + ' $';
+    
     const orderItemCount = document.getElementById('orderItemCount');
     const orderSubtotal = document.getElementById('orderSubtotal');
+    const orderShipping = document.getElementById('shippingCost');
+    const orderDiscount = document.getElementById('orderDiscount');
     const orderTotal = document.getElementById('orderTotal');
+    
     if (orderItemCount) orderItemCount.textContent = totalItems;
-    if (orderSubtotal) orderSubtotal.textContent = Math.round(total) + ' $';
-    if (orderTotal) orderTotal.textContent = Math.round(total) + ' $';
+    if (orderSubtotal) orderSubtotal.textContent = formatPrice(subtotal) + ' $';
+    if (orderShipping) {
+        orderShipping.innerHTML = `<span>التوصيل:</span><span>مدفوع (يتم حسابه عند التوصيل)</span>`;
+    }
+    if (orderDiscount) {
+        if (discount > 0) {
+            orderDiscount.innerHTML = `<span>الخصم (${discountMessage}):</span><span style="color:#2ed573;">- ${formatPrice(discount)} $</span>`;
+            orderDiscount.style.display = 'flex';
+        } else {
+            orderDiscount.style.display = 'none';
+        }
+    }
+    if (orderTotal) orderTotal.textContent = formatPrice(finalTotal) + ' $';
 }
 
 // ============================================
@@ -315,7 +548,6 @@ function getSubcategoryName(categoryId, subcategoryId) {
 // ============================================
 function renderProducts(filter = 'all', searchQuery = '', limit = displayedCount) {
     let filtered = [...products];
-    
     if (filter !== 'all') {
         if (filter === 'new') {
             const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -324,12 +556,10 @@ function renderProducts(filter = 'all', searchQuery = '', limit = displayedCount
             filtered = products.filter(p => p.categoryId === filter);
         }
     }
-    
     if (searchQuery) {
         const lower = searchQuery.toLowerCase();
         filtered = filtered.filter(p => p.name.toLowerCase().includes(lower) || (p.code && p.code.toLowerCase().includes(lower)));
     }
-    
     const toShow = filtered.slice(0, limit);
     if (productsGrid) {
         productsGrid.innerHTML = toShow.map((product, index) => `
@@ -344,7 +574,7 @@ function renderProducts(filter = 'all', searchQuery = '', limit = displayedCount
                     <h3 class="product-name">${product.name}</h3>
                     <div class="product-code" style="font-size:0.7rem; color:var(--text-light);"><i class="fas fa-barcode"></i> ${product.code || 'بدون رمز'}</div>
                     <div class="product-price-row">
-                        <div class="product-price"><span class="current-price">${product.price} $</span>${product.oldprice ? `<span class="old-price">${product.oldprice} $</span>` : ''}</div>
+                        <div class="product-price"><span class="current-price">${formatPrice(product.price)} $</span>${product.oldprice ? `<span class="old-price">${formatPrice(product.oldprice)} $</span>` : ''}</div>
                         <button class="add-to-cart" onclick="openProductOptions('${product.id}', event)"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
@@ -379,7 +609,7 @@ function openProductOptions(productId, event) {
                 <div class="options-modal-header"><h3><i class="fas fa-shopping-bag"></i> ${product.name}</h3><button class="close-options-modal" onclick="closeOptionsModal()"><i class="fas fa-times"></i></button></div>
                 <div class="options-modal-body">
                     <div class="options-product-img"><img src="${product.image}" alt="${product.name}"></div>
-                    <div class="options-product-price"><span class="current-price">${product.price} $</span>${product.oldprice ? `<span class="old-price">${product.oldprice} $</span>` : ''}</div>
+                    <div class="options-product-price"><span class="current-price">${formatPrice(product.price)} $</span>${product.oldprice ? `<span class="old-price">${formatPrice(product.oldprice)} $</span>` : ''}</div>
                     ${product.code ? `<div class="options-product-code"><i class="fas fa-barcode"></i> رمز المنتج: ${product.code}</div>` : ''}
                     ${product.sizes && product.sizes.length ? `<div class="options-group"><label><i class="fas fa-ruler"></i> اختاري المقاس:</label><div class="options-buttons" id="sizeOptions">${product.sizes.map(size => `<button class="option-btn" data-size="${size}">${size}</button>`).join('')}</div></div>` : ''}
                     ${product.colors && product.colors.length ? `<div class="options-group"><label><i class="fas fa-palette"></i> اختاري اللون:</label><div class="options-buttons" id="colorOptions">${product.colors.map(color => `<button class="option-btn color-btn" data-color="${color}" style="background:${getColorBg(color)}">${color}</button>`).join('')}</div></div>` : ''}
@@ -439,7 +669,7 @@ function openQuickView(productId, event) {
     if (event) event.stopPropagation();
     const product = products.find(p => p.id === productId);
     if (!product || !quickViewBody) return;
-    quickViewBody.innerHTML = `<div class="quick-view-img"><img src="${product.image}" alt="${product.name}"></div><div class="quick-view-info"><div class="product-category">${getSubcategoryName(product.categoryId, product.subcategoryId)}</div><h3 class="product-name">${product.name}</h3><div class="product-code" style="font-size:0.8rem; color:var(--text-light); margin-bottom:8px;"><i class="fas fa-barcode"></i> ${product.code || 'بدون رمز'}</div><p class="product-desc">${product.desc || 'لا يوجد وصف للمنتج'}</p><div class="product-price-row"><div class="product-price"><span class="current-price" style="font-size:1.5rem">${product.price} $</span>${product.oldprice ? `<span class="old-price">${product.oldprice} $</span>` : ''}</div></div>${product.sizes && product.sizes.length ? `<div class="product-sizes" style="margin:10px 0;"><strong><i class="fas fa-ruler"></i> المقاسات:</strong> ${product.sizes.join(', ')}</div>` : ''}${product.colors && product.colors.length ? `<div class="product-colors" style="margin:10px 0;"><strong><i class="fas fa-palette"></i> الألوان:</strong> ${product.colors.join(', ')}</div>` : ''}<button class="add-to-cart" onclick="openProductOptions('${product.id}', event)" style="width:100%; padding:12px; border-radius:40px; gap:8px; margin-top:15px;"><i class="fas fa-shopping-bag"></i> أضيفي إلى السلة</button></div>`;
+    quickViewBody.innerHTML = `<div class="quick-view-img"><img src="${product.image}" alt="${product.name}"></div><div class="quick-view-info"><div class="product-category">${getSubcategoryName(product.categoryId, product.subcategoryId)}</div><h3 class="product-name">${product.name}</h3><div class="product-code" style="font-size:0.8rem; color:var(--text-light); margin-bottom:8px;"><i class="fas fa-barcode"></i> ${product.code || 'بدون رمز'}</div><p class="product-desc">${product.desc || 'لا يوجد وصف للمنتج'}</p><div class="product-price-row"><div class="product-price"><span class="current-price" style="font-size:1.5rem">${formatPrice(product.price)} $</span>${product.oldprice ? `<span class="old-price">${formatPrice(product.oldprice)} $</span>` : ''}</div></div>${product.sizes && product.sizes.length ? `<div class="product-sizes" style="margin:10px 0;"><strong><i class="fas fa-ruler"></i> المقاسات:</strong> ${product.sizes.join(', ')}</div>` : ''}${product.colors && product.colors.length ? `<div class="product-colors" style="margin:10px 0;"><strong><i class="fas fa-palette"></i> الألوان:</strong> ${product.colors.join(', ')}</div>` : ''}<button class="add-to-cart" onclick="openProductOptions('${product.id}', event)" style="width:100%; padding:12px; border-radius:40px; gap:8px; margin-top:15px;"><i class="fas fa-shopping-bag"></i> أضيفي إلى السلة</button></div>`;
     quickViewModal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -462,8 +692,37 @@ function openCart() { if (cartSidebar && cartOverlay) { cartSidebar.classList.ad
 function closeCartFn() { if (cartSidebar && cartOverlay) { cartSidebar.classList.remove('active'); cartOverlay.classList.remove('active'); document.body.style.overflow = ''; } }
 function openOrderModal() { if (cart.length === 0) { showToast('🛒 السلة فارغة! أضيفي منتجات أولاً', true); return; } closeCartFn(); setTimeout(() => { if (orderModal && modalOverlay) { orderModal.classList.add('active'); modalOverlay.classList.add('active'); document.body.style.overflow = 'hidden'; } }, 300); }
 function closeOrderModal() { if (orderModal && modalOverlay) { orderModal.classList.remove('active'); modalOverlay.classList.remove('active'); document.body.style.overflow = ''; } }
-function showSuccessModal() { const now = new Date(); const timeStr = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }); const phone = document.getElementById('phone')?.value || ''; if (document.getElementById('orderTime')) document.getElementById('orderTime').textContent = timeStr; if (document.getElementById('orderPhone')) document.getElementById('orderPhone').textContent = phone; closeOrderModal(); setTimeout(() => { if (successModal) { successModal.classList.add('active'); document.body.style.overflow = 'hidden'; } }, 300); }
-function closeSuccessModal() { if (successModal) { successModal.classList.remove('active'); document.body.style.overflow = ''; cart = []; saveCartToLocal(); updateCartUI(); } }
+function showSuccessModal(phoneNumber) { 
+    if (successModal) {
+        const orderPhoneSpan = document.getElementById('orderPhone');
+        const orderTimeSpan = document.getElementById('orderTime');
+        if (orderPhoneSpan && phoneNumber) {
+            orderPhoneSpan.textContent = phoneNumber;
+        }
+        if (orderTimeSpan) {
+            const now = new Date();
+            const formattedTime = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            orderTimeSpan.textContent = formattedTime;
+        }
+        successModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+function closeSuccessModalAndGoHome() { 
+    if (successModal) { 
+        successModal.classList.remove('active'); 
+        document.body.style.overflow = ''; 
+        cart = []; 
+        appliedCoupon = null; 
+        saveCartToLocal(); 
+        saveCouponToLocal(); 
+        updateCartUI(); 
+        // إغلاق السلة إذا كانت مفتوحة
+        closeCartFn();
+        // التوجيه إلى الصفحة الرئيسية
+        window.location.href = 'index.html';
+    } 
+}
 function openContactModal() { if (contactModal && contactModalOverlay) { contactModal.classList.add('active'); contactModalOverlay.classList.add('active'); document.body.style.overflow = 'hidden'; } }
 function closeContactModalFn() { if (contactModal && contactModalOverlay) { contactModal.classList.remove('active'); contactModalOverlay.classList.remove('active'); document.body.style.overflow = ''; } }
 
@@ -537,16 +796,99 @@ if (closeModal) closeModal.addEventListener('click', closeOrderModal);
 if (modalOverlay) modalOverlay.addEventListener('click', closeOrderModal);
 if (closeQuickView) closeQuickView.addEventListener('click', closeQuickViewFn);
 if (quickViewModal) quickViewModal.addEventListener('click', (e) => { if (e.target === quickViewModal) closeQuickViewFn(); });
-if (successBtn) successBtn.addEventListener('click', closeSuccessModal);
-if (successModal) successModal.addEventListener('click', (e) => { if (e.target === successModal) closeSuccessModal(); });
+if (successBtn) successBtn.addEventListener('click', closeSuccessModalAndGoHome);
+if (successModal) successModal.addEventListener('click', (e) => { if (e.target === successModal) closeSuccessModalAndGoHome(); });
 if (bottomCartBtn) bottomCartBtn.addEventListener('click', openCart);
 if (bottomContactBtn) bottomContactBtn.addEventListener('click', openContactModal);
 if (closeContactModal) closeContactModal.addEventListener('click', closeContactModalFn);
 if (contactModalOverlay) contactModalOverlay.addEventListener('click', closeContactModalFn);
 if (loadMoreBtn) loadMoreBtn.addEventListener('click', () => { loadMoreBtn.classList.add('loading'); setTimeout(() => { displayedCount += 4; renderProducts(currentFilter, searchInput ? searchInput.value : ''); loadMoreBtn.classList.remove('loading'); }, 600); });
-if (orderForm) orderForm.addEventListener('submit', (e) => { e.preventDefault(); const fullName = document.getElementById('fullName')?.value.trim() || ''; const phone = document.getElementById('phone')?.value.trim() || ''; const city = document.getElementById('city')?.value || ''; const address = document.getElementById('address')?.value.trim() || ''; if (!fullName || !phone || !city || !address) { showToast('⚠️ يرجى ملء جميع الحقول المطلوبة', true); return; } if (!/^05\d{8}$/.test(phone)) { showToast('⚠️ رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام', true); return; } showSuccessModal(); orderForm.reset(); });
 
-// Navigation Items - handled by renderNavbar
+// ============================================
+// ORDER FORM - FULLY WORKING
+// ============================================
+if (orderForm) {
+    orderForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fullName = document.getElementById('fullName')?.value.trim() || '';
+        const phone = document.getElementById('phone')?.value.trim() || '';
+        const city = document.getElementById('city')?.value || '';
+        const address = document.getElementById('address')?.value.trim() || '';
+        const notes = document.getElementById('notes')?.value.trim() || '';
+        
+        if (!fullName || !phone || !city || !address) { 
+            showToast('⚠️ يرجى ملء جميع الحقول المطلوبة', true); 
+            return; 
+        }
+        
+        const { subtotal, discount, finalTotal } = calculateTotals();
+        const confirmMsg = `🔔 تأكيد الطلب\n\nالمجموع الفرعي: ${formatPrice(subtotal)} $\n${discount > 0 ? `الخصم: - ${formatPrice(discount)} $\n` : ''}الإجمالي النهائي: ${formatPrice(finalTotal)} $\n\nملاحظة: الدفع مسبق - سيتم التواصل معك لتأكيد الطلب وإرسال تفاصيل الدفع.\n\nهل تريد تأكيد الطلب؟`;
+        
+        if (!confirm(confirmMsg)) return;
+        
+        const usedCoupon = appliedCoupon ? { ...appliedCoupon } : null;
+        const currentCart = [...cart];
+        
+        const orderData = {
+            customer: { fullName, phone, city, address, notes },
+            items: currentCart.map(item => ({ 
+                id: item.id, 
+                name: item.name, 
+                price: parseFloat(item.price), 
+                qty: item.qty,
+                totalPrice: parseFloat(item.price) * item.qty,
+                selectedSize: item.selectedSize,
+                selectedColor: item.selectedColor
+            })),
+            subtotal: subtotal,
+            discount: discount,
+            total: finalTotal,
+            coupon: usedCoupon ? { code: usedCoupon.code, type: usedCoupon.type, value: usedCoupon.value } : null,
+            timestamp: Date.now()
+        };
+        
+        const newOrderRef = db.ref('orders').push();
+        newOrderRef.set(orderData, function(error) {
+            if (error) {
+                console.error("❌ خطأ في حفظ الطلب:", error);
+                showToast("حدث خطأ أثناء إرسال الطلب، حاول مرة أخرى", true);
+            } else {
+                console.log("✅ تم حفظ الطلب بنجاح");
+                
+                if (usedCoupon && usedCoupon.id) {
+                    db.ref(`coupons/${usedCoupon.id}`).once('value', function(snapshot) {
+                        const currentData = snapshot.val();
+                        const currentUsedCount = currentData?.usedCount || 0;
+                        const newUsedCount = currentUsedCount + 1;
+                        
+                        db.ref(`coupons/${usedCoupon.id}`).update({ usedCount: newUsedCount }, function(updateError) {
+                            if (!updateError) {
+                                if (appliedCoupon && appliedCoupon.id === usedCoupon.id) {
+                                    appliedCoupon.usedCount = newUsedCount;
+                                    saveCouponToLocal();
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                // إغلاق السلة أولاً
+                closeCartFn();
+                closeOrderModal();
+                
+                // ثم عرض نافذة النجاح مع رقم الهاتف والوقت
+                setTimeout(() => {
+                    showSuccessModal(phone);
+                }, 300);
+                
+                orderForm.reset();
+            }
+        });
+    });
+}
+
+// Navigation Items
 if (navList) {
     navList.addEventListener('click', (e) => {
         const li = e.target.closest('.nav-item');
@@ -555,17 +897,12 @@ if (navList) {
         if (!link) return;
         const href = link.getAttribute('href');
         const category = li.getAttribute('data-category');
-        
         if (href && href !== '#') {
-            if (href.includes('category.html') || href === 'index.html') {
-                return;
-            }
+            if (href.includes('category.html') || href === 'index.html') { return; }
         }
-        
         e.preventDefault();
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         li.classList.add('active');
-        
         if (category && category !== 'all') {
             window.location.href = `category.html?cat=${category}`;
         } else {
@@ -577,10 +914,20 @@ if (navList) {
     });
 }
 
+// Export for global access
+window.applyCoupon = applyCoupon;
+window.removeCoupon = removeCoupon;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.updateQty = updateQty;
+window.openProductOptions = openProductOptions;
+window.closeOptionsModal = closeOptionsModal;
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     initSearchSuggestions();
     loadCartFromLocal();
+    loadCouponFromLocal();
     loadData();
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCartFn(); closeOrderModal(); closeQuickViewFn(); closeSuccessModal(); closeContactModalFn(); closeOptionsModal(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCartFn(); closeOrderModal(); closeQuickViewFn(); closeSuccessModalAndGoHome(); closeContactModalFn(); closeOptionsModal(); } });

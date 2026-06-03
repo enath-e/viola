@@ -122,9 +122,47 @@
     <div class="cart-sidebar" id="cartSidebar"><div class="cart-header"><h3><i class="fas fa-shopping-bag"></i> سلة المشتريات</h3><button class="close-cart" id="closeCart"><i class="fas fa-times"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-empty" id="cartEmpty"><i class="fas fa-shopping-basket"></i><p>سلة المشتريات فارغة</p><span>أضيفي بعض المنتجات الجميلة!</span></div><div class="cart-footer" id="cartFooter"><div class="cart-total"><span>المجموع:</span><span class="total-price" id="totalPrice">0 ريال</span></div><button class="checkout-btn" id="checkoutBtn"><i class="fas fa-check-circle"></i> تأكيد الطلب</button></div></div>
 
     <div class="modal-overlay" id="modalOverlay"></div>
-    <div class="order-modal" id="orderModal"><div class="modal-header"><h3><i class="fas fa-clipboard-list"></i> تفاصيل الطلب</h3><button class="close-modal" id="closeModal"><i class="fas fa-times"></i></button></div><div class="modal-body"><form id="orderForm"><div class="form-group"><label><i class="fas fa-user"></i> الاسم الكامل</label><input type="text" id="fullName" placeholder="أدخلي اسمك الكامل" required></div><div class="form-group"><label><i class="fas fa-phone"></i> رقم الهاتف</label><input type="tel" id="phone" placeholder="05xxxxxxxx" required></div><div class="form-group"><label><i class="fas fa-map-marker-alt"></i> المدينة</label><select id="city" required><option value="">اختر المدينة</option><option value="riyadh">الرياض</option><option value="jeddah">جدة</option><option value="dammam">الدمام</option><option value="makkah">مكة المكرمة</option><option value="madinah">المدينة المنورة</option><option value="khobar">الخبر</option><option value="taif">الطائف</option><option value="abha">أبها</option><option value="other">أخرى</option></select></div><div class="form-group"><label><i class="fas fa-home"></i> العنوان التفصيلي</label><textarea id="address" rows="3" placeholder="أدخلي العنوان بالتفصيل..." required></textarea></div><div class="form-group"><label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label><textarea id="notes" rows="2" placeholder="أي ملاحظات خاصة بالطلب..."></textarea></div><div class="order-summary"><h4><i class="fas fa-receipt"></i> ملخص الطلب</h4><div class="summary-row"><span>عدد المنتجات:</span><span id="orderItemCount">0</span></div><div class="summary-row"><span>المجموع الفرعي:</span><span id="orderSubtotal">0 ريال</span></div><div class="summary-row"><span>الشحن:</span><span id="shippingCost">مجاني</span></div><div class="summary-row total"><span>الإجمالي:</span><span id="orderTotal">0 ريال</span></div></div><div class="payment-note"><i class="fas fa-info-circle"></i><p><strong>ملاحظة:</strong> الدفع عند الاستلام - سيتم التواصل معكِ لتأكيد الطلب.</p></div><button type="submit" class="submit-order-btn"><i class="fas fa-paper-plane"></i> إرسال الطلب</button></form></div></div>
+    <div class="order-modal" id="orderModal">
+        <div class="modal-header"><h3><i class="fas fa-clipboard-list"></i> تفاصيل الطلب</h3><button class="close-modal" id="closeModal"><i class="fas fa-times"></i></button></div>
+        <div class="modal-body">
+            <form id="orderForm">
+                <div class="form-group"><label><i class="fas fa-user"></i> الاسم الكامل</label><input type="text" id="fullName" placeholder="أدخلي اسمك الكامل" required></div>
+                <div class="form-group"><label><i class="fas fa-phone"></i> رقم الهاتف</label><input type="tel" id="phone" placeholder="أدخلي رقم الهاتف" required></div>
+                <div class="form-group"><label><i class="fas fa-map-marker-alt"></i> المدينة</label>
+                    <select id="city" required>
+                        <option value="">اختر المدينة</option>
+                        <option value="دمشق">دمشق</option>
+                        <option value="حلب">حلب</option>
+                        <option value="حمص">حمص</option>
+                        <option value="اللاذقية">اللاذقية</option>
+                        <option value="حماة">حماة</option>
+                        <option value="طرطوس">طرطوس</option>
+                        <option value="دير الزور">دير الزور</option>
+                        <option value="الحسكة">الحسكة</option>
+                        <option value="الرقة">الرقة</option>
+                        <option value="إدلب">إدلب</option>
+                        <option value="درعا">درعا</option>
+                        <option value="السويداء">السويداء</option>
+                        <option value="القنيطرة">القنيطرة</option>
+                        <option value="other">أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group"><label><i class="fas fa-home"></i> العنوان التفصيلي</label><textarea id="address" rows="3" placeholder="أدخلي العنوان بالتفصيل..." required></textarea></div>
+                <div class="form-group"><label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label><textarea id="notes" rows="2" placeholder="أي ملاحظات خاصة بالطلب..."></textarea></div>
+                <div class="order-summary">
+                    <h4><i class="fas fa-receipt"></i> ملخص الطلب</h4>
+                    <div class="summary-row"><span>عدد المنتجات:</span><span id="orderItemCount">0</span></div>
+                    <div class="summary-row"><span>المجموع الفرعي:</span><span id="orderSubtotal">0 ريال</span></div>
+                    <div class="summary-row"><span>التوصيل:</span><span id="shippingCost">مدفوع (يتم حسابه عند التوصيل)</span></div>
+                    <div class="summary-row total"><span>الإجمالي:</span><span id="orderTotal">0 ريال</span></div>
+                </div>
+                <div class="payment-note"><i class="fas fa-info-circle"></i><p><strong>ملاحظة:</strong> الدفع مسبق - سيتم التواصل معكِ لتأكيد الطلب وإرسال تفاصيل الدفع.</p></div>
+                <button type="submit" class="submit-order-btn"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
+            </form>
+        </div>
+    </div>
 
-    <div class="success-modal" id="successModal"><div class="success-content"><div class="success-icon"><i class="fas fa-check-circle"></i></div><h3>تم إرسال طلبك بنجاح! 🎉</h3><p>سنقوم بالتواصل معكِ قريباً لتأكيد الطلب.</p><div class="success-details"><p><i class="fas fa-clock"></i> وقت الطلب: <span id="orderTime"></span></p><p><i class="fas fa-phone"></i> سنتواصل معكِ على: <span id="orderPhone"></span></p></div><button class="success-btn" id="successBtn"><i class="fas fa-shopping-bag"></i> مواصلة التسوق</button></div></div>
+    <div class="success-modal" id="successModal"><div class="success-content"><div class="success-icon"><i class="fas fa-check-circle"></i></div><h3>تم إرسال طلبك بنجاح! 🎉</h3><p>سنقوم بالتواصل معكِ قريباً لتأكيد الطلب وإرسال تفاصيل الدفع.</p><div class="success-details"><p><i class="fas fa-clock"></i> وقت الطلب: <span id="orderTime"></span></p><p><i class="fas fa-phone"></i> سنتواصل معكِ على: <span id="orderPhone"></span></p></div><button class="success-btn" id="successBtn"><i class="fas fa-shopping-bag"></i> مواصلة التسوق</button></div></div>
 
     <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تمت الإضافة إلى السلة!</span></div>
     <div class="quick-view-modal" id="quickViewModal"><div class="quick-view-content"><button class="close-quick-view" id="closeQuickView"><i class="fas fa-times"></i></button><div class="quick-view-body" id="quickViewBody"></div></div></div>

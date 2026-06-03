@@ -1,5 +1,5 @@
 // ============================================
-// CATEGORY PAGE - VIOLA STORE (DECIMAL & COUNTER FIXED)
+// CATEGORY PAGE - VIOLA STORE (SIMPLIFIED ORDER SUBMIT)
 // ============================================
 
 // Firebase Configuration
@@ -28,92 +28,16 @@ let currentCategoryId = '';
 let currentSubcategoryId = 'all';
 let currentSort = 'random';
 let searchQueryCategory = '';
-let realtimeListeners = {};
 const DELIVERY_FEE = 0;
 
 // DOM Elements
 const navList = document.getElementById('navList');
-
-// Helper: format price with decimals
-function formatPrice(price) {
-    return parseFloat(price).toFixed(2);
-}
-
-// إخفاء رسائل Console الخاصة بالكوبونات فقط
-const originalConsoleLog = console.log;
-console.log = function(...args) {
-    const message = args.join(' ');
-    if (message.includes('الكوبون') || message.includes('coupon') || message.includes('كود')) {
-        return;
-    }
-    originalConsoleLog.apply(console, args);
-};
 
 // ============================================
 // Helper Functions
 // ============================================
 function getUrlParam(param) { return new URLSearchParams(window.location.search).get(param); }
 function shuffleArray(array) { const arr = [...array]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-
-// ============================================
-// Realtime Listeners for Auto-Update
-// ============================================
-function setupRealtimeListeners() {
-    // الاستماع للتغييرات في المنتجات
-    if (realtimeListeners.products) db.ref('products').off('value', realtimeListeners.products);
-    realtimeListeners.products = db.ref('products').on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            const productsData = snapshot.val();
-            products = Object.keys(productsData).map(key => ({ id: key, ...productsData[key] }));
-            products = products.filter(p => p.active !== false);
-            if (currentCategoryId) {
-                renderCategoryProducts();
-                renderSubCategories();
-            }
-        }
-    });
-    
-    // الاستماع للتغييرات في الفئات
-    if (realtimeListeners.categories) db.ref('categories').off('value', realtimeListeners.categories);
-    realtimeListeners.categories = db.ref('categories').on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            const categoriesData = snapshot.val();
-            categories = Object.keys(categoriesData).map(key => ({ id: key, ...categoriesData[key] }));
-            categories = categories.filter(c => c.active !== false);
-            categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-            renderNavbar();
-            if (currentCategoryId) {
-                const catExists = categories.some(c => c.id === currentCategoryId);
-                if (!catExists && categories.length > 0) {
-                    currentCategoryId = categories[0].id;
-                }
-                loadCategory(currentCategoryId);
-            }
-        }
-    });
-    
-    // الاستماع للتغييرات في الكوبونات
-    if (realtimeListeners.coupons) db.ref('coupons').off('value', realtimeListeners.coupons);
-    realtimeListeners.coupons = db.ref('coupons').on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            const couponsData = snapshot.val();
-            coupons = Object.keys(couponsData).map(key => ({ id: key, ...couponsData[key] }));
-            coupons = coupons.filter(c => c.active !== false);
-            if (appliedCoupon) {
-                const updatedCoupon = coupons.find(c => c.id === appliedCoupon.id);
-                if (updatedCoupon) {
-                    appliedCoupon = { ...appliedCoupon, usedCount: updatedCoupon.usedCount };
-                    saveCouponToLocal();
-                    updateCartUI();
-                } else {
-                    appliedCoupon = null;
-                    saveCouponToLocal();
-                    updateCartUI();
-                }
-            }
-        }
-    });
-}
 
 // ============================================
 // Render Dynamic Navbar
@@ -206,9 +130,6 @@ async function loadData() {
         renderNavbar();
         initCategoryPage();
         
-        // إعداد المستمعات للتحديث التلقائي
-        setupRealtimeListeners();
-        
     } catch (err) {
         console.error("❌ خطأ في تحميل البيانات:", err);
         showToast("خطأ في تحميل البيانات", true);
@@ -220,19 +141,8 @@ async function loadData() {
 // ============================================
 function saveCartToLocal() { localStorage.setItem('viola_cart', JSON.stringify(cart)); }
 function loadCartFromLocal() { const saved = localStorage.getItem('viola_cart'); if (saved) { cart = JSON.parse(saved); updateCartUI(); } }
-function saveCouponToLocal() { 
-    if (appliedCoupon) {
-        localStorage.setItem('viola_coupon', JSON.stringify(appliedCoupon));
-    } else {
-        localStorage.removeItem('viola_coupon');
-    }
-}
-function loadCouponFromLocal() { 
-    const saved = localStorage.getItem('viola_coupon');
-    if (saved) {
-        appliedCoupon = JSON.parse(saved);
-    }
-}
+function saveCouponToLocal() { if (appliedCoupon) localStorage.setItem('viola_coupon', JSON.stringify(appliedCoupon)); else localStorage.removeItem('viola_coupon'); }
+function loadCouponFromLocal() { const saved = localStorage.getItem('viola_coupon'); if (saved) { appliedCoupon = JSON.parse(saved); } }
 
 function addToCart(product, selectedSize = null, selectedColor = null) {
     const existingIndex = cart.findIndex(item => item.id === product.id && item.selectedSize === selectedSize && item.selectedColor === selectedColor);
@@ -254,49 +164,40 @@ function updateQty(index, change) {
     else { saveCartToLocal(); updateCartUI(); }
 }
 
-// ============================================
-// Calculate Totals with Coupon
-// ============================================
-function getCouponDiscount() {
-    if (!appliedCoupon) return 0;
-    
-    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
-    
-    if (appliedCoupon.usageLimit && appliedCoupon.usedCount >= appliedCoupon.usageLimit) {
-        appliedCoupon = null;
-        saveCouponToLocal();
-        return 0;
-    }
-    if (appliedCoupon.expiryDate && Date.now() > appliedCoupon.expiryDate) {
-        appliedCoupon = null;
-        saveCouponToLocal();
-        return 0;
-    }
-    if (appliedCoupon.minAmount && subtotal < appliedCoupon.minAmount) {
-        return 0;
-    }
-    
-    let discount = 0;
-    const value = parseFloat(appliedCoupon.value);
-    
-    if (appliedCoupon.type === 'percentage') {
-        discount = (subtotal * value) / 100;
-    } else {
-        discount = value;
-    }
-    
-    if (discount > subtotal) discount = subtotal;
-    return discount;
-}
-
 function calculateTotals() {
     const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
-    const discount = getCouponDiscount();
-    const discountMessage = appliedCoupon ? 
-        (appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}% خصم` : `${appliedCoupon.value}$ خصم`) : '';
-    const finalTotal = subtotal - discount;
+    let discount = 0;
+    let discountMessage = '';
     
+    if (appliedCoupon) {
+        const coupon = appliedCoupon;
+        const isValid = checkCouponValidity(coupon, subtotal);
+        if (isValid) {
+            if (coupon.type === 'percentage') {
+                discount = (subtotal * coupon.value) / 100;
+                discountMessage = `${coupon.value}% خصم`;
+            } else {
+                discount = coupon.value;
+                discountMessage = `${coupon.value}$ خصم`;
+            }
+            discount = Math.min(discount, subtotal);
+        } else {
+            appliedCoupon = null;
+            saveCouponToLocal();
+            discount = 0;
+        }
+    }
+    
+    const finalTotal = subtotal - discount;
     return { subtotal, discount, discountMessage, finalTotal };
+}
+
+function checkCouponValidity(coupon, subtotal) {
+    if (!coupon.active) return false;
+    if (coupon.expiryDate && Date.now() > coupon.expiryDate) return false;
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) return false;
+    if (coupon.minAmount && subtotal < coupon.minAmount) return false;
+    return true;
 }
 
 function applyCoupon(code) {
@@ -307,37 +208,26 @@ function applyCoupon(code) {
     }
     
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-        showToast(`❌ تم استخدام هذا الكود ${coupon.usageLimit} مرة`, true);
-        return false;
-    }
-    if (coupon.expiryDate && Date.now() > coupon.expiryDate) {
-        showToast('❌ انتهت صلاحية الكود', true);
+        showToast(`❌ هذا الكود انتهت صلاحيته (تم استخدامه ${coupon.usageLimit} مرة)`, true);
         return false;
     }
     
-    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
-    if (coupon.minAmount && subtotal < coupon.minAmount) {
-        showToast(`❌ الحد الأدنى للطلب هو ${coupon.minAmount}$`, true);
+    const { subtotal } = calculateTotals();
+    if (!checkCouponValidity(coupon, subtotal)) {
+        if (coupon.minAmount && subtotal < coupon.minAmount) {
+            showToast(`❌ الحد الأدنى للطلب هو ${coupon.minAmount}$`, true);
+        } else if (coupon.expiryDate && Date.now() > coupon.expiryDate) {
+            showToast('❌ انتهت صلاحية الكود', true);
+        } else {
+            showToast('❌ الكود غير صالح حالياً', true);
+        }
         return false;
     }
-    
-    appliedCoupon = {
-        id: coupon.id,
-        code: coupon.code,
-        type: coupon.type,
-        value: coupon.value,
-        usedCount: coupon.usedCount || 0,
-        usageLimit: coupon.usageLimit,
-        minAmount: coupon.minAmount,
-        expiryDate: coupon.expiryDate
-    };
-    
+    appliedCoupon = coupon;
     saveCouponToLocal();
     updateCartUI();
-    
-    const discountValue = coupon.type === 'percentage' ? `${coupon.value}%` : `${coupon.value}$`;
-    const remaining = coupon.usageLimit ? (coupon.usageLimit - (coupon.usedCount || 0)) : 'غير محدود';
-    showToast(`✅ تم تطبيق كود ${coupon.code} (خصم ${discountValue}) - تبقى ${remaining} استخدام`);
+    const remaining = coupon.usageLimit ? (coupon.usageLimit - coupon.usedCount) : 'غير محدود';
+    showToast(`✅ تم تطبيق كود الخصم ${coupon.code} (تبقى ${remaining} استخدام)`);
     return true;
 }
 
@@ -358,7 +248,7 @@ function updateCartUI() {
     const cartFooterDiv = document.getElementById('cartFooter');
     
     if (cartCount) cartCount.textContent = totalItems;
-    if (totalPrice) totalPrice.textContent = formatPrice(finalTotal) + ' $';
+    if (totalPrice) totalPrice.textContent = Math.round(finalTotal) + ' $';
     
     if (cart.length === 0) {
         if (cartItemsDiv) cartItemsDiv.innerHTML = '';
@@ -375,7 +265,7 @@ function updateCartUI() {
                         <div class="cart-item-name">${item.name}</div>
                         ${item.selectedSize ? `<div class="cart-item-size"><i class="fas fa-ruler"></i> المقاس: ${item.selectedSize}</div>` : ''}
                         ${item.selectedColor ? `<div class="cart-item-color"><i class="fas fa-palette"></i> اللون: ${item.selectedColor}</div>` : ''}
-                        <div class="cart-item-price">${formatPrice(item.price)} $</div>
+                        <div class="cart-item-price">${item.price} $</div>
                         <div class="cart-item-qty"><button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button><span class="qty-value">${item.qty}</span><button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button><button class="remove-item" onclick="removeFromCart(${idx})"><i class="fas fa-trash-alt"></i></button></div>
                     </div>
                 </div>
@@ -388,11 +278,11 @@ function updateCartUI() {
         const couponSection = document.createElement('div');
         couponSection.className = 'coupon-section';
         if (appliedCoupon) {
-            const remaining = appliedCoupon.usageLimit ? (appliedCoupon.usageLimit - (appliedCoupon.usedCount || 0)) : 'غير محدود';
+            const remaining = appliedCoupon.usageLimit ? (appliedCoupon.usageLimit - appliedCoupon.usedCount) : 'غير محدود';
             couponSection.innerHTML = `
                 <div class="coupon-discount" style="display:flex; justify-content:space-between; margin-bottom:8px;">
                     <span>الخصم (${discountMessage}):</span>
-                    <span style="color:#2ed573;">- ${formatPrice(discount)} $</span>
+                    <span style="color:#2ed573;">- ${Math.round(discount)} $</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="color:#e91e63;">✓ كود ${appliedCoupon.code} مطبق (تبقى ${remaining} استخدام)</span>
@@ -418,17 +308,17 @@ function updateCartUI() {
     const orderTotal = document.getElementById('orderTotal');
     
     if (orderItemCount) orderItemCount.textContent = totalItems;
-    if (orderSubtotal) orderSubtotal.textContent = formatPrice(subtotal) + ' $';
+    if (orderSubtotal) orderSubtotal.textContent = Math.round(subtotal) + ' $';
     if (orderShipping) {
         orderShipping.innerHTML = `<span>التوصيل:</span><span>مدفوع (يتم حسابه عند التوصيل)</span>`;
     }
     if (orderDiscount) {
         if (discount > 0) {
-            orderDiscount.innerHTML = `<span>الخصم (${discountMessage}):</span><span style="color:#2ed573;">- ${formatPrice(discount)} $</span>`;
+            orderDiscount.innerHTML = `<span>الخصم:</span><span style="color:#2ed573;">- ${Math.round(discount)} $</span>`;
             orderDiscount.style.display = 'flex';
         } else { orderDiscount.style.display = 'none'; }
     }
-    if (orderTotal) orderTotal.textContent = formatPrice(finalTotal) + ' $';
+    if (orderTotal) orderTotal.textContent = Math.round(finalTotal) + ' $';
 }
 
 // ============================================
@@ -454,25 +344,13 @@ function openCart() { const sidebar = document.getElementById('cartSidebar'); co
 function closeCartFn() { const sidebar = document.getElementById('cartSidebar'); const overlay = document.getElementById('cartOverlay'); if (sidebar && overlay) { sidebar.classList.remove('active'); overlay.classList.remove('active'); document.body.style.overflow = ''; } }
 function openOrderModal() { if (cart.length === 0) { showToast('🛒 السلة فارغة! أضيفي منتجات أولاً', true); return; } closeCartFn(); setTimeout(() => { const modal = document.getElementById('orderModal'); const overlay = document.getElementById('modalOverlay'); if (modal && overlay) { modal.classList.add('active'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } }, 300); }
 function closeOrderModal() { const modal = document.getElementById('orderModal'); const overlay = document.getElementById('modalOverlay'); if (modal && overlay) { modal.classList.remove('active'); overlay.classList.remove('active'); document.body.style.overflow = ''; } }
-function showSuccessModal(phoneNumber) { 
-    const successModal = document.getElementById('successModal');
+function showSuccessModal() { 
     if (successModal) {
-        const orderPhoneSpan = document.getElementById('orderPhone');
-        const orderTimeSpan = document.getElementById('orderTime');
-        if (orderPhoneSpan && phoneNumber) {
-            orderPhoneSpan.textContent = phoneNumber;
-        }
-        if (orderTimeSpan) {
-            const now = new Date();
-            const formattedTime = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-            orderTimeSpan.textContent = formattedTime;
-        }
         successModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 }
-function closeSuccessModalAndGoHome() { 
-    const successModal = document.getElementById('successModal');
+function closeSuccessModal() { 
     if (successModal) { 
         successModal.classList.remove('active'); 
         document.body.style.overflow = ''; 
@@ -481,8 +359,6 @@ function closeSuccessModalAndGoHome() {
         saveCartToLocal(); 
         saveCouponToLocal(); 
         updateCartUI(); 
-        closeCartFn();
-        window.location.href = 'index.html';
     } 
 }
 function openContactModal() { const modal = document.getElementById('contactModal'); const overlay = document.getElementById('contactModalOverlay'); if (modal && overlay) { modal.classList.add('active'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; } }
@@ -510,7 +386,7 @@ function openProductOptions(productId, event) {
                 <div class="options-modal-header"><h3><i class="fas fa-shopping-bag"></i> ${product.name}</h3><button class="close-options-modal" onclick="closeOptionsModal()"><i class="fas fa-times"></i></button></div>
                 <div class="options-modal-body">
                     <div class="options-product-img"><img src="${product.image}" alt="${product.name}"></div>
-                    <div class="options-product-price"><span class="current-price">${formatPrice(product.price)} $</span>${product.oldprice ? `<span class="old-price">${formatPrice(product.oldprice)} $</span>` : ''}</div>
+                    <div class="options-product-price"><span class="current-price">${product.price} $</span>${product.oldprice ? `<span class="old-price">${product.oldprice} $</span>` : ''}</div>
                     ${product.code ? `<div class="options-product-code"><i class="fas fa-barcode"></i> رمز المنتج: ${product.code}</div>` : ''}
                     ${product.sizes && product.sizes.length ? `<div class="options-group"><label><i class="fas fa-ruler"></i> اختاري المقاس:</label><div class="options-buttons" id="sizeOptions">${product.sizes.map(size => `<button class="option-btn" data-size="${size}">${size}</button>`).join('')}</div></div>` : ''}
                     ${product.colors && product.colors.length ? `<div class="options-group"><label><i class="fas fa-palette"></i> اختاري اللون:</label><div class="options-buttons" id="colorOptions">${product.colors.map(color => `<button class="option-btn color-btn" data-color="${color}" style="background:${getColorBg(color)}">${color}</button>`).join('')}</div></div>` : ''}
@@ -573,7 +449,7 @@ function openQuickView(productId, event) {
     const modal = document.getElementById('quickViewModal');
     const body = document.getElementById('quickViewBody');
     if (!modal || !body) return;
-    body.innerHTML = `<div class="quick-view-img"><img src="${product.image}" alt="${product.name}"></div><div class="quick-view-info"><div class="product-category">${getSubcategoryName(product.categoryId, product.subcategoryId)}</div><h3 class="product-name">${product.name}</h3><div class="product-code" style="font-size:0.8rem; color:#b08a9e; margin-bottom:8px;"><i class="fas fa-barcode"></i> ${product.code || 'بدون رمز'}</div><p class="product-desc">${product.desc || 'لا يوجد وصف للمنتج'}</p><div class="product-price-row"><div class="product-price"><span class="current-price" style="font-size:1.5rem">${formatPrice(product.price)} $</span>${product.oldprice ? `<span class="old-price">${formatPrice(product.oldprice)} $</span>` : ''}</div></div>${product.sizes && product.sizes.length ? `<div class="product-sizes" style="margin:10px 0;"><strong><i class="fas fa-ruler"></i> المقاسات:</strong> ${product.sizes.join(', ')}</div>` : ''}${product.colors && product.colors.length ? `<div class="product-colors" style="margin:10px 0;"><strong><i class="fas fa-palette"></i> الألوان:</strong> ${product.colors.join(', ')}</div>` : ''}<button class="add-to-cart" onclick="openProductOptions('${product.id}', event)" style="width:100%; padding:12px; border-radius:40px; gap:8px; margin-top:15px;"><i class="fas fa-shopping-bag"></i> أضيفي إلى السلة</button></div>`;
+    body.innerHTML = `<div class="quick-view-img"><img src="${product.image}" alt="${product.name}"></div><div class="quick-view-info"><div class="product-category">${getSubcategoryName(product.categoryId, product.subcategoryId)}</div><h3 class="product-name">${product.name}</h3><div class="product-code" style="font-size:0.8rem; color:#b08a9e; margin-bottom:8px;"><i class="fas fa-barcode"></i> ${product.code || 'بدون رمز'}</div><p class="product-desc">${product.desc || 'لا يوجد وصف للمنتج'}</p><div class="product-price-row"><div class="product-price"><span class="current-price" style="font-size:1.5rem">${product.price} $</span>${product.oldprice ? `<span class="old-price">${product.oldprice} $</span>` : ''}</div></div>${product.sizes && product.sizes.length ? `<div class="product-sizes" style="margin:10px 0;"><strong><i class="fas fa-ruler"></i> المقاسات:</strong> ${product.sizes.join(', ')}</div>` : ''}${product.colors && product.colors.length ? `<div class="product-colors" style="margin:10px 0;"><strong><i class="fas fa-palette"></i> الألوان:</strong> ${product.colors.join(', ')}</div>` : ''}<button class="add-to-cart" onclick="openProductOptions('${product.id}', event)" style="width:100%; padding:12px; border-radius:40px; gap:8px; margin-top:15px;"><i class="fas fa-shopping-bag"></i> أضيفي إلى السلة</button></div>`;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -679,7 +555,7 @@ function renderCategoryProducts() {
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-code" style="font-size:0.7rem; color:#b08a9e;"><i class="fas fa-barcode"></i> ${product.code || 'بدون رمز'}</div>
                 <div class="product-price-row">
-                    <div class="product-price"><span class="current-price">${formatPrice(product.price)} $</span>${product.oldprice ? `<span class="old-price">${formatPrice(product.oldprice)} $</span>` : ''}</div>
+                    <div class="product-price"><span class="current-price">${product.price} $</span>${product.oldprice ? `<span class="old-price">${product.oldprice} $</span>` : ''}</div>
                     <button class="add-to-cart" onclick="openProductOptions('${product.id}', event)"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
@@ -797,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('checkoutBtn')?.addEventListener('click', openOrderModal);
     document.getElementById('closeModal')?.addEventListener('click', closeOrderModal);
     document.getElementById('modalOverlay')?.addEventListener('click', closeOrderModal);
-    document.getElementById('successBtn')?.addEventListener('click', closeSuccessModalAndGoHome);
+    document.getElementById('successBtn')?.addEventListener('click', closeSuccessModal);
     document.getElementById('closeQuickView')?.addEventListener('click', closeQuickView);
     document.getElementById('quickViewModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('quickViewModal')) closeQuickView(); });
     document.getElementById('sortSelect')?.addEventListener('change', (e) => { currentSort = e.target.value; renderCategoryProducts(); });
@@ -806,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('contactModalOverlay')?.addEventListener('click', closeContactModalFn);
     
     // ============================================
-    // ORDER FORM - FULLY WORKING WITH DECIMALS AND COUNTER
+    // ORDER FORM - SIMPLIFIED VERSION
     // ============================================
     document.getElementById('orderForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -822,12 +698,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return; 
         }
         
+        if (!/^09\d{8}$/.test(phone)) { 
+            showToast('⚠️ رقم الهاتف يجب أن يبدأ بـ 09 ويتكون من 10 أرقام', true); 
+            return; 
+        }
+        
         const { subtotal, discount, finalTotal } = calculateTotals();
-        const confirmMsg = `🔔 تأكيد الطلب\n\nالمجموع الفرعي: ${formatPrice(subtotal)} $\n${discount > 0 ? `الخصم: - ${formatPrice(discount)} $\n` : ''}الإجمالي النهائي: ${formatPrice(finalTotal)} $\n\nملاحظة: الدفع مسبق - سيتم التواصل معك لتأكيد الطلب وإرسال تفاصيل الدفع.\n\nهل تريد تأكيد الطلب؟`;
+        const confirmMsg = `🔔 تأكيد الطلب\n\nالمجموع الفرعي: ${Math.round(subtotal)} $\n${discount > 0 ? `الخصم: - ${Math.round(discount)} $\n` : ''}الإجمالي النهائي: ${Math.round(finalTotal)} $\n\nملاحظة: الدفع مسبق - سيتم التواصل معك لتأكيد الطلب وإرسال تفاصيل الدفع.\n\nهل تريد تأكيد الطلب؟`;
         
         if (!confirm(confirmMsg)) return;
         
-        const usedCoupon = appliedCoupon ? { ...appliedCoupon } : null;
+        const usedCoupon = appliedCoupon;
         const currentCart = [...cart];
         
         const orderData = {
@@ -835,9 +716,8 @@ document.addEventListener('DOMContentLoaded', () => {
             items: currentCart.map(item => ({ 
                 id: item.id, 
                 name: item.name, 
-                price: parseFloat(item.price), 
+                price: item.price, 
                 qty: item.qty,
-                totalPrice: parseFloat(item.price) * item.qty,
                 selectedSize: item.selectedSize,
                 selectedColor: item.selectedColor
             })),
@@ -848,56 +728,33 @@ document.addEventListener('DOMContentLoaded', () => {
             timestamp: Date.now()
         };
         
-        console.log("📦 إرسال الطلب:", orderData);
-        
         const newOrderRef = db.ref('orders').push();
         newOrderRef.set(orderData, function(error) {
             if (error) {
-                console.error("❌ خطأ في حفظ الطلب:", error);
+                console.error("خطأ في حفظ الطلب:", error);
                 showToast("حدث خطأ أثناء إرسال الطلب، حاول مرة أخرى", true);
             } else {
                 console.log("✅ تم حفظ الطلب بنجاح - رقم:", newOrderRef.key);
                 
                 if (usedCoupon && usedCoupon.id) {
-                    db.ref(`coupons/${usedCoupon.id}`).once('value', function(snapshot) {
+                    const couponRef = db.ref(`coupons/${usedCoupon.id}`);
+                    couponRef.once('value', function(snapshot) {
                         const currentData = snapshot.val();
                         const currentUsedCount = currentData?.usedCount || 0;
                         const newUsedCount = currentUsedCount + 1;
-                        
-                        db.ref(`coupons/${usedCoupon.id}`).update({ usedCount: newUsedCount }, function(updateError) {
-                            if (updateError) {
-                                console.error("❌ خطأ في تحديث الكوبون:", updateError);
-                            } else {
-                                if (appliedCoupon && appliedCoupon.id === usedCoupon.id) {
-                                    appliedCoupon.usedCount = newUsedCount;
-                                    saveCouponToLocal();
-                                }
-                                const couponIndex = coupons.findIndex(c => c.id === usedCoupon.id);
-                                if (couponIndex !== -1) {
-                                    coupons[couponIndex].usedCount = newUsedCount;
-                                }
-                                updateCartUI();
-                            }
-                        });
+                        couponRef.update({ usedCount: newUsedCount });
+                        console.log(`✅ تم تحديث استخدام الكوبون ${usedCoupon.code}: ${currentUsedCount} → ${newUsedCount}`);
                     });
                 }
                 
-                // إغلاق السلة ونافذة الطلب
-                closeCartFn();
-                closeOrderModal();
-                
-                // عرض نافذة النجاح مع رقم الهاتف والوقت
-                setTimeout(() => {
-                    showSuccessModal(phone);
-                }, 300);
-                
+                showSuccessModal();
                 document.getElementById('orderForm')?.reset();
             }
         });
     });
 });
 
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCartFn(); closeOrderModal(); closeQuickView(); const successModalElem = document.getElementById('successModal'); if (successModalElem && successModalElem.classList.contains('active')) closeSuccessModalAndGoHome(); closeContactModalFn(); closeOptionsModal(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeCartFn(); closeOrderModal(); closeQuickView(); const successModalElem = document.getElementById('successModal'); if (successModalElem && successModalElem.classList.contains('active')) closeSuccessModal(); closeContactModalFn(); closeOptionsModal(); } });
 
 // Export for global access
 window.applyCoupon = applyCoupon;
