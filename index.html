@@ -2,11 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ڤيولا | تسوقي بأناقة</title>
     <link rel="icon" type="image/jpeg" href="logo-viola.jpg">
     <link rel="shortcut icon" type="image/jpeg" href="logo-viola.jpg">
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -35,33 +35,12 @@
             </div>
         </div>
 
-        <!-- Navigation -->
+        <!-- Navigation - Dynamic from Firebase -->
         <nav class="main-nav">
             <div class="container">
                 <ul class="nav-list" id="navList">
                     <li class="nav-item active" data-category="all">
                         <a href="#"><i class="fas fa-home"></i> الرئيسية</a>
-                    </li>
-                    <li class="nav-item" data-category="fashion">
-                        <a href="category.html?cat=fashion"><i class="fas fa-tshirt"></i> أزياء</a>
-                    </li>
-                    <li class="nav-item" data-category="beauty">
-                        <a href="category.html?cat=beauty"><i class="fas fa-magic"></i> جمال</a>
-                    </li>
-                    <li class="nav-item" data-category="accessories">
-                        <a href="category.html?cat=accessories"><i class="fas fa-gem"></i> إكسسوارات</a>
-                    </li>
-                    <li class="nav-item" data-category="bags">
-                        <a href="category.html?cat=bags"><i class="fas fa-shopping-bag"></i> حقائب</a>
-                    </li>
-                    <li class="nav-item" data-category="shoes">
-                        <a href="category.html?cat=shoes"><i class="fas fa-shoe-prints"></i> أحذية</a>
-                    </li>
-                    <li class="nav-item" data-category="perfumes">
-                        <a href="category.html?cat=perfumes"><i class="fas fa-spray-can"></i> عطور</a>
-                    </li>
-                    <li class="nav-item" data-category="home">
-                        <a href="category.html?cat=home"><i class="fas fa-couch"></i> منزل</a>
                     </li>
                 </ul>
             </div>
@@ -70,40 +49,8 @@
 
     <!-- Hero / Ads Slider Section -->
     <section class="hero-section" id="heroSection">
-        <div class="hero-slider" id="heroSlider">
-            <div class="hero-slide active" data-ad-id="1">
-                <div class="hero-content">
-                    <span class="hero-tag">✨ مجموعة جديدة</span>
-                    <h2>أناقة لا تُضاهى<br>لأجمل إطلالة</h2>
-                    <p>اكتشفي أحدث صيحات الموضة والجمال بأسعار مذهلة</p>
-                    <button class="hero-btn">تسوقي الآن <i class="fas fa-arrow-left"></i></button>
-                </div>
-                <div class="hero-image"><div class="hero-img-placeholder"><i class="fas fa-female"></i></div></div>
-            </div>
-            <div class="hero-slide" data-ad-id="2">
-                <div class="hero-content">
-                    <span class="hero-tag">🎁 عرض خاص</span>
-                    <h2>مجموعة الصيف<br>بأسعار خيالية</h2>
-                    <p>تشكيلة واسعة من الأزياء الصيفية الأنيقة</p>
-                    <button class="hero-btn">اكتشفي المزيد <i class="fas fa-arrow-left"></i></button>
-                </div>
-                <div class="hero-image"><div class="hero-img-placeholder" style="background: linear-gradient(135deg, #ffe0f0, #ffcce0);"><i class="fas fa-sun"></i></div></div>
-            </div>
-            <div class="hero-slide" data-ad-id="3">
-                <div class="hero-content">
-                    <span class="hero-tag">💄 جمالك أولوية</span>
-                    <h2>منتجات الجمال<br>بخصومات حتى 40%</h2>
-                    <p>أفضل الماركات العالمية بأقل الأسعار</p>
-                    <button class="hero-btn">تسوقي الآن <i class="fas fa-arrow-left"></i></button>
-                </div>
-                <div class="hero-image"><div class="hero-img-placeholder" style="background: linear-gradient(135deg, #ffe8f0, #ffd0e0);"><i class="fas fa-sparkles"></i></div></div>
-            </div>
-        </div>
-        <div class="hero-dots" id="heroDots">
-            <span class="dot active" data-slide="0"></span>
-            <span class="dot" data-slide="1"></span>
-            <span class="dot" data-slide="2"></span>
-        </div>
+        <div class="hero-slider" id="heroSlider"></div>
+        <div class="hero-dots" id="heroDots"></div>
     </section>
 
     <!-- Offers & Deals -->
@@ -135,13 +82,7 @@
     <section class="products-section container">
         <div class="section-header">
             <h2><i class="fas fa-sparkles"></i> منتجات مختارة لكِ</h2>
-            <div class="filter-tabs">
-                <button class="filter-tab active" data-filter="all">الكل</button>
-                <button class="filter-tab" data-filter="fashion">أزياء</button>
-                <button class="filter-tab" data-filter="beauty">جمال</button>
-                <button class="filter-tab" data-filter="accessories">إكسسوارات</button>
-                <button class="filter-tab" data-filter="new">جديد</button>
-            </div>
+            <div class="filter-tabs" id="filterTabs"></div>
         </div>
         <div class="products-grid" id="productsGrid"></div>
         <div class="load-more">
@@ -159,59 +100,47 @@
         </div>
     </section>
 
-<!-- Footer -->
-<footer class="main-footer">
-    <div class="container footer-grid">
-        <!-- العمود الأول: الشعار والوصف -->
-        <div class="footer-col">
-            <div class="footer-logo">
-                <img src="logo-viola.jpg" alt="ڤيولا" class="footer-logo-img">
-                <h3>ڤيولا</h3>
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container footer-grid">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <img src="logo-viola.jpg" alt="ڤيولا" class="footer-logo-img">
+                    <h3>ڤيولا</h3>
+                </div>
+                <p>وجهتك الأولى للأناقة والجمال. نقدم لكِ أجود المنتجات بأفضل الأسعار مع تجربة تسوق سلسة وممتعة.</p>
+                <div class="social-links">
+                    <a href="https://wa.me/966500000000" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://instagram.com/viola.style" target="_blank"><i class="fab fa-instagram"></i></a>
+                </div>
             </div>
-            <p>وجهتك الأولى للأناقة والجمال. نقدم لكِ أجود المنتجات بأفضل الأسعار مع تجربة تسوق سلسة وممتعة.</p>
-            <div class="social-links">
-                <a href="https://wa.me/966500000000" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                <a href="https://instagram.com/viola.style" target="_blank"><i class="fab fa-instagram"></i></a>
+            <div class="footer-col">
+                <h4>روابط سريعة</h4>
+                <ul>
+                    <li><a href="index.html">الرئيسية</a></li>
+                    <li><a href="#">منتجاتنا</a></li>
+                    <li><a href="#">العروض</a></li>
+                    <li><a href="#">من نحن</a></li>
+                </ul>
             </div>
-        </div>
-
-        <!-- العمود الثاني: روابط سريعة -->
-        <div class="footer-col">
-            <h4>روابط سريعة</h4>
-            <ul>
-                <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="#">منتجاتنا</a></li>
-                <li><a href="#">العروض</a></li>
-                <li><a href="#">من نحن</a></li>
-            </ul>
-        </div>
-
-        <!-- العمود الثالث: تواصل معنا -->
-        <div class="footer-col">
-            <h4>تواصل معنا</h4>
-            <ul class="contact-info">
-                <li><i class="fas fa-phone"></i> 966500000000+</li>
-                <li><i class="fas fa-envelope"></i> info@viola-style.com</li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- قسم المصمم - عبارة واحدة مع علامة حقوق النشر وأيقونات التواصل -->
-    <div class="designer-credit">
-        <div class="container">
-            <p>
-                <i class="fas fa-heart" style="color: #ff6b9d;"></i>
-                تم التصميم بواسطة <strong>أحمد كلاوي</strong> | Ahmad Kllawe
-                <i class="far fa-copyright"></i> 2026
-                <i class="fas fa-heart" style="color: #ff6b9d;"></i>
-            </p>
-            <div class="designer-links">
-                <a href="https://wa.me/966500000000" target="_blank"><i class="fab fa-whatsapp"></i> واتساب</a>
-                <a href="https://instagram.com/ahmad.kllawe" target="_blank"><i class="fab fa-instagram"></i> إنستغرام</a>
+            <div class="footer-col">
+                <h4>تواصل معنا</h4>
+                <ul class="contact-info">
+                    <li><i class="fas fa-phone"></i> 966500000000+</li>
+                    <li><i class="fas fa-envelope"></i> info@viola-style.com</li>
+                </ul>
             </div>
         </div>
-    </div>
-</footer>
+        <div class="designer-credit">
+            <div class="container">
+                <p><i class="fas fa-heart" style="color: #ff6b9d;"></i> تم التصميم بواسطة <strong>أحمد كلاوي</strong> | Ahmad Kllawe <i class="far fa-copyright"></i> 2026 <i class="fas fa-heart" style="color: #ff6b9d;"></i></p>
+                <div class="designer-links">
+                    <a href="https://wa.me/966500000000" target="_blank"><i class="fab fa-whatsapp"></i> واتساب</a>
+                    <a href="https://instagram.com/ahmad.kllawe" target="_blank"><i class="fab fa-instagram"></i> إنستغرام</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- Bottom Navigation (Mobile Only) -->
     <div class="bottom-nav">
@@ -251,7 +180,7 @@
                 <div class="form-group"><label><i class="fas fa-user"></i> الاسم الكامل</label><input type="text" id="fullName" placeholder="أدخلي اسمك الكامل" required></div>
                 <div class="form-group"><label><i class="fas fa-phone"></i> رقم الهاتف</label><input type="tel" id="phone" placeholder="05xxxxxxxx" required></div>
                 <div class="form-group"><label><i class="fas fa-map-marker-alt"></i> المدينة</label><select id="city" required><option value="">اختر المدينة</option><option value="riyadh">الرياض</option><option value="jeddah">جدة</option><option value="dammam">الدمام</option><option value="makkah">مكة المكرمة</option><option value="madinah">المدينة المنورة</option><option value="khobar">الخبر</option><option value="taif">الطائف</option><option value="abha">أبها</option><option value="other">أخرى</option></select></div>
-                <div class="form-group"><label><i class="fas fa-home"></i> العنوان التفصيلي</label><textarea id="address" rows="3" placeholder="أدخلي العنوان بالتفصيل (الحي، الشارع، رقم المنزل...)" required></textarea></div>
+                <div class="form-group"><label><i class="fas fa-home"></i> العنوان التفصيلي</label><textarea id="address" rows="3" placeholder="أدخلي العنوان بالتفصيل..." required></textarea></div>
                 <div class="form-group"><label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label><textarea id="notes" rows="2" placeholder="أي ملاحظات خاصة بالطلب..."></textarea></div>
                 <div class="order-summary">
                     <h4><i class="fas fa-receipt"></i> ملخص الطلب</h4>
@@ -260,7 +189,7 @@
                     <div class="summary-row"><span>الشحن:</span><span id="shippingCost">مجاني</span></div>
                     <div class="summary-row total"><span>الإجمالي:</span><span id="orderTotal">0 ريال</span></div>
                 </div>
-                <div class="payment-note"><i class="fas fa-info-circle"></i><p><strong>ملاحظة:</strong> الدفع مسبق - سيتم التواصل معكِ لتأكيد الطلب وإرسال تفاصيل الدفع.</p></div>
+                <div class="payment-note"><i class="fas fa-info-circle"></i><p><strong>ملاحظة:</strong> الدفع عند الاستلام - سيتم التواصل معكِ لتأكيد الطلب.</p></div>
                 <button type="submit" class="submit-order-btn"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
             </form>
         </div>
@@ -271,7 +200,7 @@
         <div class="success-content">
             <div class="success-icon"><i class="fas fa-check-circle"></i></div>
             <h3>تم إرسال طلبك بنجاح! 🎉</h3>
-            <p>سنقوم بالتواصل معكِ قريباً لتأكيد الطلب وإرسال تفاصيل الدفع.</p>
+            <p>سنقوم بالتواصل معكِ قريباً لتأكيد الطلب.</p>
             <div class="success-details">
                 <p><i class="fas fa-clock"></i> وقت الطلب: <span id="orderTime"></span></p>
                 <p><i class="fas fa-phone"></i> سنتواصل معكِ على: <span id="orderPhone"></span></p>
@@ -291,7 +220,7 @@
         </div>
     </div>
 
-    <!-- Contact Modal for WhatsApp/Instagram -->
+    <!-- Contact Modal -->
     <div class="modal-overlay" id="contactModalOverlay"></div>
     <div class="order-modal" id="contactModal">
         <div class="modal-header">
@@ -300,16 +229,14 @@
         </div>
         <div class="modal-body" style="text-align: center;">
             <div style="display: flex; flex-direction: column; gap: 20px; padding: 20px;">
-                <a href="https://wa.me/966500000000" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: #25D366; color: white; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.1rem;">
-                    <i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i> واتساب
-                </a>
-                <a href="https://instagram.com/viola.style" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(45deg, #f09433, #d62976, #962fbf); color: white; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.1rem;">
-                    <i class="fab fa-instagram" style="font-size: 1.5rem;"></i> إنستغرام
-                </a>
+                <a href="https://wa.me/966500000000" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: #25D366; color: white; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 700;"><i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i> واتساب</a>
+                <a href="https://instagram.com/viola.style" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(45deg, #f09433, #d62976, #962fbf); color: white; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 700;"><i class="fab fa-instagram" style="font-size: 1.5rem;"></i> إنستغرام</a>
             </div>
         </div>
     </div>
 
-    <script src="script.js?v=10"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

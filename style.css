@@ -184,6 +184,7 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+/* SEARCH SUGGESTIONS */
 .search-suggestions {
     position: absolute;
     top: calc(100% + 5px);
@@ -1165,9 +1166,14 @@ section {
 
 .designer-credit p {
     color: white;
-    font-size: 0.95rem;
+    font-size: 1rem;
     margin: 0;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .designer-credit p strong {
@@ -1180,16 +1186,30 @@ section {
     color: #ff6b9d;
 }
 
-.footer-bottom {
-    background: rgba(0,0,0,0.1);
-    padding: 15px 0;
-    text-align: center;
+.designer-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
 }
 
-.footer-bottom p {
+.designer-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: rgba(255,255,255,0.9);
+    text-decoration: none;
     font-size: 0.85rem;
-    margin: 0;
+    transition: var(--transition);
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50px;
+}
+
+.designer-links a:hover {
+    background: rgba(255,255,255,0.25);
+    color: white;
 }
 
 /* ============================================
@@ -1368,11 +1388,6 @@ section {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-.cart-item-img i {
-    font-size: 1.5rem;
-    color: var(--primary-light);
 }
 
 .cart-item-details {
@@ -1987,11 +2002,6 @@ section {
     padding: 10px;
 }
 
-.quick-view-img i {
-    font-size: 5rem;
-    color: var(--primary-light);
-}
-
 .quick-view-info {
     padding: 24px;
 }
@@ -2039,26 +2049,21 @@ section {
     body {
         padding-bottom: 70px;
     }
-
     .header-content {
         flex-wrap: wrap;
         gap: 16px;
     }
-
     .search-box {
         order: 3;
         max-width: 100%;
         flex-basis: 100%;
     }
-
     .header-actions .action-btn:not(#cartBtn) {
         display: none;
     }
-
     .bottom-nav {
         display: flex;
     }
-
     .nav-list {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -2187,107 +2192,4 @@ section {
 .cart-footer.hidden,
 .cart-empty.hidden {
     display: none;
-}
-/* قسم المصمم - عبارة واحدة + علامة حقوق النشر */
-.designer-credit {
-    background: rgba(0,0,0,0.15);
-    padding: 20px 0;
-    margin-top: 30px;
-    text-align: center;
-}
-
-.designer-credit p {
-    color: white;
-    font-size: 1rem;
-    margin: 0 0 12px 0;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.designer-credit p strong {
-    color: white;
-    font-weight: 800;
-}
-
-.designer-credit p i {
-    margin: 0 3px;
-    color: #ff6b9d;
-}
-
-/* روابط المصمم للتواصل (أيقونات فقط) */
-.designer-links {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-}
-
-.designer-links a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: white;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: var(--transition);
-    padding: 8px 16px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 50px;
-}
-
-.designer-links a:hover {
-    background: rgba(255,255,255,0.25);
-    transform: translateY(-2px);
-}
-
-.designer-links a i {
-    font-size: 1.2rem;
-}
-
-/* إخفاء الفوتر القديم */
-.footer-bottom {
-    display: none;
-}
-
-/* ============================================
-   RESPONSIVE FOOTER
-   ============================================ */
-
-@media (max-width: 768px) {
-    .footer-grid {
-        grid-template-columns: 1fr;
-        gap: 30px;
-        text-align: center;
-    }
-    
-    .footer-logo {
-        justify-content: center;
-    }
-    
-    .footer-col h4::after {
-        right: 50%;
-        transform: translateX(50%);
-    }
-    
-    .footer-col ul li a {
-        justify-content: center;
-    }
-    
-    .contact-info li {
-        justify-content: center;
-    }
-    
-    .social-links {
-        justify-content: center;
-    }
-    
-    .designer-credit p {
-        flex-direction: column;
-        gap: 5px;
-    }
 }
