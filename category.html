@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ڤيولا | تصنيف المنتجات</title>
+    <link rel="icon" type="image/jpeg" href="logo-viola.jpg">
+    <link rel="stylesheet" href="style.css?v=10">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .category-page { padding-top: 20px; }
+        .category-hero { background: var(--gradient-hero); padding: 40px 0; margin-bottom: 30px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+        .category-hero h1 { font-size: 2.2rem; font-weight: 900; color: var(--text-dark); display: flex; align-items: center; gap: 12px; }
+        .category-hero h1 i { color: var(--primary); font-size: 2rem; }
+        .category-hero p { color: var(--text-medium); margin-top: 8px; font-size: 1.1rem; }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-light); }
+        .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .breadcrumb i { font-size: 0.7rem; }
+        .filter-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .filter-bar h2 { font-size: 1.3rem; font-weight: 800; color: var(--text-dark); }
+        .sort-select { padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius-xl); font-family: 'Tajawal', sans-serif; font-size: 0.9rem; color: var(--text-dark); background: var(--bg-white); cursor: pointer; outline: none; }
+        .sort-select:focus { border-color: var(--primary); }
+        .no-products { text-align: center; padding: 60px 20px; }
+        .no-products i { font-size: 4rem; color: var(--border); margin-bottom: 16px; }
+        .no-products h3 { font-size: 1.3rem; color: var(--text-dark); margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content container">
+            <a href="index.html" class="logo">
+                <img src="logo-viola.jpg" alt="ڤيولا" class="logo-img">
+                <div class="logo-text"><h1>ڤيولا</h1><span>VIOLA STYLE</span></div>
+            </a>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="ابحثي عن منتجك المفضل...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn" id="cartBtn"><i class="fas fa-shopping-bag"></i><span class="cart-count" id="cartCount">0</span></button>
+            </div>
+        </div>
+        <nav class="main-nav">
+            <div class="container">
+                <ul class="nav-list">
+                    <li class="nav-item" data-category="all"><a href="index.html"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li class="nav-item" data-category="fashion"><a href="category.html?cat=fashion"><i class="fas fa-tshirt"></i> أزياء</a></li>
+                    <li class="nav-item" data-category="beauty"><a href="category.html?cat=beauty"><i class="fas fa-magic"></i> جمال</a></li>
+                    <li class="nav-item" data-category="accessories"><a href="category.html?cat=accessories"><i class="fas fa-gem"></i> إكسسوارات</a></li>
+                    <li class="nav-item" data-category="bags"><a href="category.html?cat=bags"><i class="fas fa-shopping-bag"></i> حقائب</a></li>
+                    <li class="nav-item" data-category="shoes"><a href="category.html?cat=shoes"><i class="fas fa-shoe-prints"></i> أحذية</a></li>
+                    <li class="nav-item" data-category="perfumes"><a href="category.html?cat=perfumes"><i class="fas fa-spray-can"></i> عطور</a></li>
+                    <li class="nav-item" data-category="home"><a href="category.html?cat=home"><i class="fas fa-couch"></i> منزل</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <section class="category-hero">
+        <div class="container">
+            <div class="breadcrumb"><a href="index.html">الرئيسية</a><i class="fas fa-chevron-left"></i><span id="breadcrumbCategory">القسم</span></div>
+            <h1 id="categoryTitle"><i class="fas fa-tshirt"></i> أزياء</h1>
+            <p id="categoryDesc">تشكيلة واسعة من الأزياء الأنيقة والعصرية</p>
+        </div>
+    </section>
+
+    <section class="sub-categories-section container">
+        <div class="section-header"><h2><i class="fas fa-th"></i> الفئات الفرعية</h2></div>
+        <div class="sub-categories-grid" id="subCategoriesGrid"></div>
+    </section>
+
+    <section class="products-section container category-page">
+        <div class="filter-bar">
+            <h2 id="productsSectionTitle"><i class="fas fa-sparkles"></i> منتجات عشوائية</h2>
+            <select class="sort-select" id="sortSelect">
+                <option value="random">ترتيب عشوائي</option>
+                <option value="price-low">السعر: من الأقل للأعلى</option>
+                <option value="price-high">السعر: من الأعلى للأقل</option>
+                <option value="newest">الأحدث</option>
+                <option value="popular">الأكثر شعبية</option>
+            </select>
+        </div>
+        <div class="products-grid" id="productsGrid"></div>
+        <div class="no-products" id="noProducts" style="display:none"><i class="fas fa-box-open"></i><h3>لا توجد منتجات</h3><p>جربي فئة أخرى أو عدي لاحقاً</p></div>
+    </section>
+
+<!-- Footer -->
+<footer class="main-footer">
+    <div class="container footer-grid">
+        <div class="footer-col">
+            <div class="footer-logo">
+                <img src="logo-viola.jpg" alt="ڤيولا" class="footer-logo-img">
+                <h3>ڤيولا</h3>
+            </div>
+            <p>وجهتك الأولى للأناقة والجمال. نقدم لكِ أجود المنتجات بأفضل الأسعار مع تجربة تسوق سلسة وممتعة.</p>
+            <div class="social-links">
+                <a href="https://wa.me/966500000000" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                <a href="https://instagram.com/viola.style" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>روابط سريعة</h4>
+            <ul>
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="#">منتجاتنا</a></li>
+                <li><a href="#">العروض</a></li>
+                <li><a href="#">من نحن</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>تواصل معنا</h4>
+            <ul class="contact-info">
+                <li><i class="fas fa-phone"></i> 966500000000+</li>
+                <li><i class="fas fa-envelope"></i> info@viola-style.com</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- قسم المصمم - عبارة واحدة مع علامة حقوق النشر وأيقونات التواصل -->
+    <div class="designer-credit">
+        <div class="container">
+            <p>
+                <i class="fas fa-heart" style="color: #ff6b9d;"></i>
+                تم التصميم بواسطة <strong>أحمد كلاوي</strong> | Ahmad Kllawe
+                <i class="far fa-copyright"></i> 2026
+                <i class="fas fa-heart" style="color: #ff6b9d;"></i>
+            </p>
+            <div class="designer-links">
+                <a href="https://wa.me/966500000000" target="_blank"><i class="fab fa-whatsapp"></i> واتساب</a>
+                <a href="https://instagram.com/ahmad.kllawe" target="_blank"><i class="fab fa-instagram"></i> إنستغرام</a>
+            </div>
+        </div>
+    </div>
+</footer>
+    <div class="bottom-nav">
+        <a href="index.html" class="bottom-nav-item"><i class="fas fa-home"></i><span>الرئيسية</span></a>
+        <a href="#" class="bottom-nav-item" id="bottomCartBtn"><i class="fas fa-shopping-bag"></i><span>السلة</span></a>
+        <a href="#" class="bottom-nav-item" id="bottomContactBtn"><i class="fas fa-headset"></i><span>تواصل معنا</span></a>
+    </div>
+
+    <!-- Cart Sidebar & Modals -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-sidebar" id="cartSidebar"><div class="cart-header"><h3><i class="fas fa-shopping-bag"></i> سلة المشتريات</h3><button class="close-cart" id="closeCart"><i class="fas fa-times"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-empty" id="cartEmpty"><i class="fas fa-shopping-basket"></i><p>سلة المشتريات فارغة</p><span>أضيفي بعض المنتجات الجميلة!</span></div><div class="cart-footer" id="cartFooter"><div class="cart-total"><span>المجموع:</span><span class="total-price" id="totalPrice">0 ريال</span></div><button class="checkout-btn" id="checkoutBtn"><i class="fas fa-check-circle"></i> تأكيد الطلب</button></div></div>
+
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="order-modal" id="orderModal"><div class="modal-header"><h3><i class="fas fa-clipboard-list"></i> تفاصيل الطلب</h3><button class="close-modal" id="closeModal"><i class="fas fa-times"></i></button></div><div class="modal-body"><form id="orderForm"><div class="form-group"><label><i class="fas fa-user"></i> الاسم الكامل</label><input type="text" id="fullName" placeholder="أدخلي اسمك الكامل" required></div><div class="form-group"><label><i class="fas fa-phone"></i> رقم الهاتف</label><input type="tel" id="phone" placeholder="05xxxxxxxx" required></div><div class="form-group"><label><i class="fas fa-map-marker-alt"></i> المدينة</label><select id="city" required><option value="">اختر المدينة</option><option value="riyadh">الرياض</option><option value="jeddah">جدة</option><option value="dammam">الدمام</option><option value="makkah">مكة المكرمة</option><option value="madinah">المدينة المنورة</option><option value="khobar">الخبر</option><option value="taif">الطائف</option><option value="abha">أبها</option><option value="other">أخرى</option></select></div><div class="form-group"><label><i class="fas fa-home"></i> العنوان التفصيلي</label><textarea id="address" rows="3" placeholder="أدخلي العنوان بالتفصيل..." required></textarea></div><div class="form-group"><label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label><textarea id="notes" rows="2" placeholder="أي ملاحظات خاصة بالطلب..."></textarea></div><div class="order-summary"><h4><i class="fas fa-receipt"></i> ملخص الطلب</h4><div class="summary-row"><span>عدد المنتجات:</span><span id="orderItemCount">0</span></div><div class="summary-row"><span>المجموع الفرعي:</span><span id="orderSubtotal">0 ريال</span></div><div class="summary-row"><span>الشحن:</span><span id="shippingCost">مجاني</span></div><div class="summary-row total"><span>الإجمالي:</span><span id="orderTotal">0 ريال</span></div></div><div class="payment-note"><i class="fas fa-info-circle"></i><p><strong>ملاحظة:</strong> الدفع مسبق - سيتم التواصل معكِ لتأكيد الطلب.</p></div><button type="submit" class="submit-order-btn"><i class="fas fa-paper-plane"></i> إرسال الطلب</button></form></div></div>
+
+    <div class="success-modal" id="successModal"><div class="success-content"><div class="success-icon"><i class="fas fa-check-circle"></i></div><h3>تم إرسال طلبك بنجاح! 🎉</h3><p>سنقوم بالتواصل معكِ قريباً لتأكيد الطلب.</p><div class="success-details"><p><i class="fas fa-clock"></i> وقت الطلب: <span id="orderTime"></span></p><p><i class="fas fa-phone"></i> سنتواصل معكِ على: <span id="orderPhone"></span></p></div><button class="success-btn" id="successBtn"><i class="fas fa-shopping-bag"></i> مواصلة التسوق</button></div></div>
+
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">تمت الإضافة إلى السلة!</span></div>
+    <div class="quick-view-modal" id="quickViewModal"><div class="quick-view-content"><button class="close-quick-view" id="closeQuickView"><i class="fas fa-times"></i></button><div class="quick-view-body" id="quickViewBody"></div></div></div>
+
+    <div class="modal-overlay" id="contactModalOverlay"></div>
+    <div class="order-modal" id="contactModal">
+        <div class="modal-header"><h3><i class="fas fa-headset"></i> تواصل معنا</h3><button class="close-modal" id="closeContactModal"><i class="fas fa-times"></i></button></div>
+        <div class="modal-body" style="text-align: center;"><div style="display: flex; flex-direction: column; gap: 20px; padding: 20px;"><a href="https://wa.me/966500000000" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: #25D366; color: white; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 700;"><i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i> واتساب</a><a href="https://instagram.com/viola.style" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(45deg, #f09433, #d62976, #962fbf); color: white; padding: 16px; border-radius: 50px; text-decoration: none; font-weight: 700;"><i class="fab fa-instagram" style="font-size: 1.5rem;"></i> إنستغرام</a></div></div>
+    </div>
+
+    <script src="category.js?v=10"></script>
+</body>
+</html>
