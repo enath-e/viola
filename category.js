@@ -39,87 +39,6 @@ function formatPrice(price) {
     return parseFloat(price).toFixed(2);
 }
 
-// ============================================
-// SEARCH CLEAR BUTTON FUNCTION - CATEGORY PAGE
-// ============================================
-function clearSearchInput() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-    }
-
-    if (clearBtn) {
-        clearBtn.classList.remove('has-text');
-    }
-
-    // Reset category search
-    if (typeof catSearchSuggestions !== 'undefined' && catSearchSuggestions) {
-        catSearchSuggestions.classList.remove('active');
-    }
-    if (typeof searchQueryCategory !== 'undefined') {
-        searchQueryCategory = '';
-    }
-    if (typeof renderCategoryProducts === 'function') {
-        renderCategoryProducts();
-    }
-}
-
-// Update clear button state based on input
-function updateClearButtonState() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    if (!searchInput || !clearBtn) return;
-
-    if (searchInput.value.trim().length > 0) {
-        clearBtn.classList.add('has-text');
-    } else {
-        clearBtn.classList.remove('has-text');
-    }
-}
-
-// Initialize clear button on page load
-function initClearButton() {
-    const searchInput = document.getElementById('searchInput');
-
-    if (searchInput) {
-        // Update on input
-        searchInput.addEventListener('input', function() {
-            updateClearButtonState();
-            // Also trigger category search
-            const query = searchInput.value.trim();
-            if (typeof catSearchSuggestions !== 'undefined' && catSearchSuggestions) {
-                if (query.length > 0) {
-                    const lowerQuery = query.toLowerCase();
-                    const matches = products.filter(p => p.categoryId === currentCategoryId && (p.name.toLowerCase().includes(lowerQuery) || (p.code && p.code.toLowerCase().includes(lowerQuery)))).slice(0, 5);
-                    if (matches.length > 0) {
-                        catSearchSuggestions.innerHTML = matches.map(p => `<div class="suggestion-item" onclick="window.selectCatSuggestionAndScroll('${p.name.replace(/'/g, "\'")}')"><i class="fas fa-search"></i><span class="suggestion-name">${p.name} ${p.code ? `(${p.code})` : ''}</span></div>`).join('');
-                        catSearchSuggestions.classList.add('active');
-                    } else {
-                        catSearchSuggestions.innerHTML = `<div class="suggestion-empty"><i class="fas fa-search"></i><span>لا توجد نتائج</span></div>`;
-                        catSearchSuggestions.classList.add('active');
-                    }
-                } else {
-                    catSearchSuggestions.classList.remove('active');
-                }
-            }
-        });
-        searchInput.addEventListener('keyup', updateClearButtonState);
-        searchInput.addEventListener('focus', updateClearButtonState);
-
-        // Initial check
-        updateClearButtonState();
-    }
-}
-
-
-function formatPrice(price) {
-    return parseFloat(price).toFixed(2);
-}
-
 // إخفاء رسائل Console الخاصة بالكوبونات فقط
 const originalConsoleLog = console.log;
 console.log = function(...args) {
@@ -688,7 +607,7 @@ function loadCategory(catId) {
     const descEl = document.getElementById('categoryDesc');
     const breadcrumbEl = document.getElementById('breadcrumbCategory');
     if (titleEl) titleEl.innerHTML = `<i class="fas fa-tag"></i> ${catData.name}`;
-    if (descEl) descEl.textContent = `تشكيلة واسعة من ${catData.name}  `;
+    if (descEl) descEl.textContent = `تشكيلة واسعة من ${catData.name} الأنيقة والعصرية`;
     if (breadcrumbEl) breadcrumbEl.textContent = catData.name;
     
     renderSubCategories();
@@ -868,7 +787,6 @@ function initCategoryPage() {
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     initCatSearch();
-    initClearButton();
     loadCartFromLocal();
     loadCouponFromLocal();
     loadData();
