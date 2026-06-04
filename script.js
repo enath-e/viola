@@ -275,27 +275,21 @@ function renderHeroSlider() {
     const heroDots = document.getElementById('heroDots');
     if (!heroSlider || !heroDots) return;
     if (ads.length === 0) {
-        heroSlider.innerHTML = `<div class="hero-slide active"><div class="hero-content"><span class="hero-tag">✨ مرحباً بك</span><h2>تسوقي بأحدث التصاميم</h2><p>اكتشفي أجمل المنتجات في متجر ڤيولا</p><button class="hero-btn">تسوقي الآن <i class="fas fa-arrow-left"></i></button></div><div class="hero-image"><div class="hero-img-placeholder"><i class="fas fa-female"></i></div></div></div>`;
+        heroSlider.innerHTML = `<div class="hero-slide active"><img src="https://via.placeholder.com/1400x320/e91e63/ffffff?text=ڤيولا+ستايل" alt="ڤيولا" class="hero-slide-image" onerror="this.src='https://via.placeholder.com/1400x320/f48fb1/ffffff?text=VIOLA+STYLE'"></div>`;
         heroDots.innerHTML = '<span class="dot active"></span>';
         initHeroSlider();
         return;
     }
     heroSlider.innerHTML = ads.map((ad, index) => `
         <div class="hero-slide ${index === 0 ? 'active' : ''}" data-ad-id="${ad.id}">
-            <div class="hero-content">
-                <span class="hero-tag">✨ عرض خاص</span>
-                <h2>${ad.text || 'تسوقي بأحدث التصاميم'}</h2>
-                <p>اكتشفي أجمل المنتجات في متجر ڤيولا</p>
-                <button class="hero-btn">تسوقي الآن <i class="fas fa-arrow-left"></i></button>
-            </div>
-            <div class="hero-image"><div class="hero-img-placeholder"><img src="${ad.image}" alt="إعلان" style="width:100%; height:100%; object-fit:cover; border-radius:50%;"></div></div>
+            <img src="${ad.image}" alt="إعلان" class="hero-slide-image" onerror="this.src='https://via.placeholder.com/1400x320/f48fb1/ffffff?text=VIOLA+STYLE'">
+            <div class="hero-slide-overlay"></div>
+            ${ad.text ? `<div class="hero-slide-text">${ad.text}</div>` : ''}
         </div>
     `).join('');
     heroDots.innerHTML = ads.map((_, index) => `<span class="dot ${index === 0 ? 'active' : ''}" data-slide="${index}"></span>`).join('');
     initHeroSlider();
-}
-
-// ============================================
+}// ============================================
 // Cart Functions
 // ============================================
 function saveCartToLocal() { localStorage.setItem('viola_cart', JSON.stringify(cart)); }

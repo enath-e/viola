@@ -620,7 +620,7 @@ function renderSubCategories() {
     if (!grid) return;
     const catData = categories.find(c => c.id === currentCategoryId);
     const subcategories = catData?.subcategories || {};
-    const subcatsList = [{ id: 'all', name: 'الكل', icon: 'fa-th-large', count: products.filter(p => p.categoryId === currentCategoryId).length }];
+    const subcatsList = [{ id: 'all', name: 'الكل', icon: 'fa-th-large', image: catData?.image || '', count: products.filter(p => p.categoryId === currentCategoryId).length }];
     Object.keys(subcategories).forEach(subId => {
         const sub = subcategories[subId];
         if (sub.active !== false) {
@@ -628,13 +628,14 @@ function renderSubCategories() {
                 id: subId,
                 name: sub.name,
                 icon: sub.icon || 'fa-folder',
+                image: sub.image || '',
                 count: products.filter(p => p.subcategoryId === subId && p.categoryId === currentCategoryId).length
             });
         }
     });
     grid.innerHTML = subcatsList.map(sub => `
         <div class="sub-category-card ${sub.id === currentSubcategoryId ? 'active' : ''}" data-sub-id="${sub.id}" onclick="selectSubCategory('${sub.id}')">
-            <div class="sub-cat-icon"><i class="fas ${sub.icon}"></i></div>
+            <div class="sub-cat-icon">${sub.image ? `<img src="${sub.image}" alt="${sub.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas ${sub.icon}\'></i>';">` : `<i class="fas ${sub.icon}"></i>`}</div>
             <h4>${sub.name}</h4>
             <span>${sub.count} منتج</span>
         </div>

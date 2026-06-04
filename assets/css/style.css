@@ -2311,3 +2311,387 @@ section {
         grid-template-columns: 1fr;
     }
 }
+/* ============================================
+   HERO SLIDER - FULL IMAGE WITH TEXT OVERLAY
+   ============================================ */
+
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    background: var(--gradient-hero);
+    padding: 0;
+}
+
+.hero-slider {
+    position: relative;
+    overflow: hidden;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.hero-slide {
+    display: none;
+    position: relative;
+    min-height: 500px;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.hero-slide.active {
+    display: flex;
+    opacity: 1;
+    animation: fadeSlide 0.6s ease forwards;
+}
+
+/* صورة الخلفية تغطي كامل العرض والارتفاع */
+.hero-bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* تراكب داكن فوق الصورة لكتابة النص بوضوح */
+.hero-slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+    z-index: 2;
+}
+
+/* محتوى النص المتراكب فوق الصورة */
+.hero-content {
+    position: relative;
+    z-index: 3;
+    flex: 1;
+    max-width: 550px;
+    text-align: right;
+    padding: 40px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    border-radius: 24px;
+    margin: 20px;
+    animation: slideInRight 0.8s ease;
+}
+
+.hero-tag {
+    display: inline-block;
+    background: var(--gradient-primary);
+    color: white;
+    padding: 6px 18px;
+    border-radius: var(--radius-xl);
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.hero-content h2 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: white;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-content p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.95);
+    margin-bottom: 20px;
+    max-width: 400px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 28px;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-xl);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-decoration: none;
+}
+
+.hero-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #c2185b 0%, #e91e63 100%);
+}
+
+/* إخفاء العنصر القديم للصورة */
+.hero-image {
+    display: none;
+}
+
+/* نقاط التمرير */
+.hero-dots {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0 30px;
+    background: transparent;
+}
+
+.dot {
+    width: 40px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.dot.active {
+    background: var(--primary);
+    width: 60px;
+}
+
+.dot:hover {
+    background: var(--primary-light);
+}
+
+/* ============================================
+   RESPONSIVE FOR MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .hero-slide {
+        min-height: 400px;
+    }
+    
+    .hero-content {
+        max-width: 90%;
+        padding: 20px 24px;
+        margin: 15px;
+        backdrop-filter: blur(6px);
+    }
+    
+    .hero-content h2 {
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+    }
+    
+    .hero-content p {
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+        max-width: 100%;
+    }
+    
+    .hero-tag {
+        font-size: 0.7rem;
+        padding: 4px 12px;
+        margin-bottom: 10px;
+    }
+    
+    .hero-btn {
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+    
+    .dot {
+        width: 30px;
+        height: 3px;
+    }
+    
+    .dot.active {
+        width: 45px;
+    }
+}
+@media (max-width: 480px) {
+    .hero-slide {
+        min-height: 350px;
+    }
+    
+    .hero-content {
+        padding: 16px 20px;
+        margin: 10px;
+    }
+    
+    .hero-content h2 {
+        font-size: 1.2rem;
+    }
+    
+    .hero-content p {
+        font-size: 0.75rem;
+        margin-bottom: 12px;
+    }
+    
+    .hero-btn {
+        padding: 8px 16px;
+        font-size: 0.75rem;
+    }
+}
+/* ============================================
+   HERO SLIDER - FULL IMAGE WITH TEXT OVERLAY (ONLY ADMIN TEXT)
+   ============================================ */
+
+.hero-section {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: #fce4ec;
+}
+
+.hero-slider {
+    position: relative;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.hero-slide {
+    display: none;
+    position: relative;
+    width: 100%;
+    min-height: 450px;
+}
+
+.hero-slide.active {
+    display: block;
+}
+
+/* صورة الخلفية تغطي كامل المساحة */
+.hero-bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* تراكب داكن خفيف لتحسين وضوح النص */
+.hero-slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 100%);
+    z-index: 2;
+}
+
+/* حاوية النص المتراكب فوق الصورة - في الأسفل على اليمين */
+.hero-content {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    z-index: 3;
+    max-width: 350px;
+    width: auto;
+    text-align: right;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    border-right: 3px solid #e91e63;
+}
+
+/* النص فقط - بدون أي إضافات */
+.hero-content h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    line-height: 1.5;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* إخفاء العناصر الإضافية */
+.hero-tag, .hero-btn, .hero-content p, .hero-image {
+    display: none !important;
+}
+
+/* نقاط التمرير */
+.hero-dots {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0 30px;
+    background: transparent;
+}
+
+.dot {
+    width: 40px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(233, 30, 99, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: #e91e63;
+    width: 60px;
+}
+
+.dot:hover {
+    background: #f06292;
+}
+
+/* responsive للهواتف */
+@media (max-width: 768px) {
+    .hero-slide {
+        min-height: 300px;
+    }
+    
+    .hero-content {
+        bottom: 15px;
+        right: 15px;
+        padding: 8px 15px;
+        max-width: 280px;
+    }
+    
+    .hero-content h2 {
+        font-size: 0.85rem;
+    }
+    
+    .dot {
+        width: 30px;
+        height: 3px;
+    }
+    
+    .dot.active {
+        width: 45px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-slide {
+        min-height: 250px;
+    }
+    
+    .hero-content {
+        bottom: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        max-width: 220px;
+    }
+    
+    .hero-content h2 {
+        font-size: 0.75rem;
+    }
+}
