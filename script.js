@@ -67,6 +67,68 @@ function formatPrice(price) {
     return parseFloat(price).toFixed(2);
 }
 
+// ============================================
+// SEARCH CLEAR BUTTON FUNCTION
+// ============================================
+function clearSearchInput() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+
+    if (clearBtn) {
+        clearBtn.classList.remove('has-text');
+    }
+
+    // Reset search and show all products
+    if (typeof searchSuggestions !== 'undefined' && searchSuggestions) {
+        searchSuggestions.classList.remove('active');
+    }
+    if (typeof displayedCount !== 'undefined') {
+        displayedCount = 8;
+    }
+    if (typeof renderProducts === 'function') {
+        renderProducts(currentFilter || 'all', '');
+    }
+}
+
+// Update clear button state based on input
+function updateClearButtonState() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    if (!searchInput || !clearBtn) return;
+
+    if (searchInput.value.trim().length > 0) {
+        clearBtn.classList.add('has-text');
+    } else {
+        clearBtn.classList.remove('has-text');
+    }
+}
+
+// Initialize clear button on page load
+function initClearButton() {
+    const searchInput = document.getElementById('searchInput');
+
+    if (searchInput) {
+        // Update on input
+        searchInput.addEventListener('input', updateClearButtonState);
+        searchInput.addEventListener('keyup', updateClearButtonState);
+        searchInput.addEventListener('focus', updateClearButtonState);
+
+        // Initial check
+        updateClearButtonState();
+    }
+}
+
+
+function formatPrice(price) {
+    return parseFloat(price).toFixed(2);
+}
+
 // إخفاء رسائل Console الخاصة بالكوبونات فقط (لأسباب أمنية)
 const originalConsoleLog = console.log;
 console.log = function(...args) {
@@ -558,6 +620,68 @@ function updateCartUI() {
 
 // ============================================
 // Helper Functions
+function formatPrice(price) {
+    return parseFloat(price).toFixed(2);
+}
+
+// ============================================
+// SEARCH CLEAR BUTTON FUNCTION
+// ============================================
+function clearSearchInput() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+
+    if (clearBtn) {
+        clearBtn.classList.remove('has-text');
+    }
+
+    // Reset search and show all products
+    if (typeof searchSuggestions !== 'undefined' && searchSuggestions) {
+        searchSuggestions.classList.remove('active');
+    }
+    if (typeof displayedCount !== 'undefined') {
+        displayedCount = 8;
+    }
+    if (typeof renderProducts === 'function') {
+        renderProducts(currentFilter || 'all', '');
+    }
+}
+
+// Update clear button state based on input
+function updateClearButtonState() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    if (!searchInput || !clearBtn) return;
+
+    if (searchInput.value.trim().length > 0) {
+        clearBtn.classList.add('has-text');
+    } else {
+        clearBtn.classList.remove('has-text');
+    }
+}
+
+// Initialize clear button on page load
+function initClearButton() {
+    const searchInput = document.getElementById('searchInput');
+
+    if (searchInput) {
+        // Update on input
+        searchInput.addEventListener('input', updateClearButtonState);
+        searchInput.addEventListener('keyup', updateClearButtonState);
+        searchInput.addEventListener('focus', updateClearButtonState);
+
+        // Initial check
+        updateClearButtonState();
+    }
+}
+
+
 // ============================================
 function getCategoryName(categoryId) {
     const cat = categories.find(c => c.id === categoryId);
@@ -956,6 +1080,7 @@ window.closeOptionsModal = closeOptionsModal;
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     initSearchSuggestions();
+    initClearButton();
     loadCartFromLocal();
     loadCouponFromLocal();
     loadData();

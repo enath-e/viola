@@ -92,7 +92,7 @@
 <!-- ==================== تبويب الطلبات ==================== -->
 <div id="tabOrders" class="tab-content active">
     <h3 style="margin: 5px 0 15px; font-size:1rem;"><i class="fas fa-truck"></i> الطلبات المستلمة</h3>
-    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchOrders" placeholder="ابحث باسم العميل أو رقم الهاتف..."></div>
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchOrders" placeholder="ابحث باسم العميل أو رقم الهاتف..." autocomplete="off"><button class="admin-search-clear" id="clearSearchOrders" type="button" onclick="clearAdminSearch('orders')"><i class="fas fa-times"></i></button></div>
     <div id="ordersStats" class="badge" style="background:#fce4ec; display:inline-block; margin-bottom:10px;"></div>
     <div id="ordersList" class="items-list"></div>
 </div>
@@ -156,7 +156,7 @@
         <div id="productLoader" style="display:none; text-align:center; margin-top:10px;"><i class="fas fa-spinner fa-spin"></i> جاري...</div>
     </div>
     <h3 style="margin: 5px 0 8px; font-size:0.9rem;"><i class="fas fa-boxes"></i> جميع المنتجات</h3>
-    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchProducts" placeholder="ابحث بالاسم أو الرمز..."></div>
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchProducts" placeholder="ابحث بالاسم أو الرمز..." autocomplete="off"><button class="admin-search-clear" id="clearSearchProducts" type="button" onclick="clearAdminSearch('products')"><i class="fas fa-times"></i></button></div>
     <div id="productsStats" class="badge" style="background:#fce4ec; display:inline-block; margin-bottom:10px;"></div>
     <div id="productsList" class="items-list"></div>
 </div>
@@ -702,7 +702,95 @@
         } catch (err) { console.error(err); showToast("حفظ البيانات فشل: "+err.message, true); }
     }
     
-    async function loadData() {
+    // ==================== Admin Search Clear Function ====================
+    function clearAdminSearch(type) {
+        if (type === 'products') {
+            const input = document.getElementById('searchProducts');
+            const btn = document.getElementById('clearSearchProducts');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (btn) {
+                btn.classList.remove('has-text');
+            }
+            lastSearchText = '';
+            renderProducts();
+        } else if (type === 'orders') {
+            const input = document.getElementById('searchOrders');
+            const btn = document.getElementById('clearSearchOrders');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (btn) {
+                btn.classList.remove('has-text');
+            }
+            lastOrderSearchText = '';
+            renderOrders();
+        }
+    }
+
+    // Update admin clear button states
+    function updateAdminClearButton(type) {
+        if (type === 'products') {
+            const input = document.getElementById('searchProducts');
+            const btn = document.getElementById('clearSearchProducts');
+            if (!input || !btn) return;
+            if (input.value.trim().length > 0) {
+                btn.classList.add('has-text');
+            } else {
+                btn.classList.remove('has-text');
+            }
+        } else if (type === 'orders') {
+            const input = document.getElementById('searchOrders');
+            const btn = document.getElementById('clearSearchOrders');
+            if (!input || !btn) return;
+            if (input.value.trim().length > 0) {
+                btn.classList.add('has-text');
+            } else {
+                btn.classList.remove('has-text');
+            }
+        }
+    }
+
+    // Initialize admin clear buttons
+    function initAdminClearButtons() {
+        const searchProductsInput = document.getElementById('searchProducts');
+        const searchOrdersInput = document.getElementById('searchOrders');
+
+        if (searchProductsInput) {
+            searchProductsInput.addEventListener('input', function() {
+                updateAdminClearButton('products');
+                lastSearchText = searchProductsInput.value;
+                renderProducts();
+            });
+            searchProductsInput.addEventListener('keyup', function() {
+                updateAdminClearButton('products');
+            });
+            searchProductsInput.addEventListener('focus', function() {
+                updateAdminClearButton('products');
+            });
+            updateAdminClearButton('products');
+        }
+
+        if (searchOrdersInput) {
+            searchOrdersInput.addEventListener('input', function() {
+                updateAdminClearButton('orders');
+                lastOrderSearchText = searchOrdersInput.value;
+                renderOrders();
+            });
+            searchOrdersInput.addEventListener('keyup', function() {
+                updateAdminClearButton('orders');
+            });
+            searchOrdersInput.addEventListener('focus', function() {
+                updateAdminClearButton('orders');
+            });
+            updateAdminClearButton('orders');
+        }
+    }
+
+        async function loadData() {
         try {
             const [adsSnap, catSnap, prodSnap, couponsSnap, ordersSnap] = await Promise.all([
                 db.ref('ads').once('value'),
@@ -721,11 +809,13 @@
             updateCategorySelects();
             renderAll();
             
+            // Initialize admin clear buttons
+            initAdminClearButtons();
+            
             // إعداد المستمعات للتحديث التلقائي
             setupRealtimeListeners();
             
-            document.getElementById('searchProducts')?.addEventListener('input', (e) => { lastSearchText = e.target.value; renderProducts(); });
-            document.getElementById('searchOrders')?.addEventListener('input', (e) => { lastOrderSearchText = e.target.value; renderOrders(); });
+            // Search handlers now in initAdminClearButtons()
         } catch(err) { console.error(err); showToast("خطأ في تحميل البيانات", true); }
     }
     

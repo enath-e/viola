@@ -2454,3 +2454,100 @@ section {
 .footer-col ul li a:hover::after {
     width: 100%;
 }
+
+
+/* ============================================
+   SEARCH CLEAR BUTTON (X) - ALWAYS VISIBLE
+   ============================================ */
+
+.search-clear-btn {
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: var(--bg-light);
+    border: none;
+    border-radius: 50%;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    z-index: 5;
+    padding: 0;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.search-clear-btn.has-text {
+    opacity: 1;
+    pointer-events: auto;
+    background: var(--bg-light);
+    color: var(--text-light);
+}
+
+.search-clear-btn.has-text:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+/* Admin search clear button */
+.admin-search-clear {
+    position: absolute;
+    left: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    background: #f8bbd9;
+    border: none;
+    border-radius: 50%;
+    color: #4a1a3a;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    z-index: 5;
+    padding: 0;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.admin-search-clear.has-text {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.admin-search-clear.has-text:hover {
+    background: #e91e63;
+    color: white;
+}
+
+/* Responsive for clear button */
+@media (max-width: 768px) {
+    .search-clear-btn {
+        left: 48px;
+        width: 24px;
+        height: 24px;
+    }
+    .admin-search-clear {
+        left: 32px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-clear-btn {
+        left: 45px;
+        width: 22px;
+        height: 22px;
+        font-size: 0.7rem;
+    }
+}
