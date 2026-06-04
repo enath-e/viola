@@ -688,7 +688,7 @@ function loadCategory(catId) {
     const descEl = document.getElementById('categoryDesc');
     const breadcrumbEl = document.getElementById('breadcrumbCategory');
     if (titleEl) titleEl.innerHTML = `<i class="fas fa-tag"></i> ${catData.name}`;
-    if (descEl) descEl.textContent = `تشكيلة واسعة من ${catData.name} الأنيقة والعصرية`;
+    if (descEl) descEl.textContent = `تشكيلة واسعة من ${catData.name}  `;
     if (breadcrumbEl) breadcrumbEl.textContent = catData.name;
     
     renderSubCategories();

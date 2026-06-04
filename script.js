@@ -1,4 +1,47 @@
 // ============================================
+// SPLASH SCREEN - Simple Hide Function
+// ============================================
+function hideSplashScreen() {
+    const splash = document.getElementById('splashScreen');
+    if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(function() {
+            if (splash.parentNode) {
+                splash.parentNode.removeChild(splash);
+            }
+        }, 600);
+    }
+}
+
+// Check if we should skip splash screen (when coming from footer links)
+const urlParamsSplash = new URLSearchParams(window.location.search);
+const filterParamSplash = urlParamsSplash.get('filter');
+const skipSplash = (filterParamSplash === 'products' || filterParamSplash === 'offers');
+
+// Global variable to track if splash should be hidden
+window.splashDataLoaded = false;
+window.splashMinTimePassed = false;
+
+function checkHideSplash() {
+    if (window.splashDataLoaded && window.splashMinTimePassed) {
+        hideSplashScreen();
+    }
+}
+
+if (skipSplash) {
+    // Immediately hide splash when coming from footer links
+    window.addEventListener('DOMContentLoaded', function() {
+        hideSplashScreen();
+    });
+} else {
+    // Start minimum timer for normal page load
+    setTimeout(function() {
+        window.splashMinTimePassed = true;
+        checkHideSplash();
+    }, 2500);
+}
+
+// ============================================
 // VIOLA STORE - MAIN PAGE (FULLY FIXED)
 // ============================================
 
@@ -63,68 +106,6 @@ const filterTabsContainer = document.getElementById('filterTabs');
 const navList = document.getElementById('navList');
 
 // Helper Functions
-function formatPrice(price) {
-    return parseFloat(price).toFixed(2);
-}
-
-// ============================================
-// SEARCH CLEAR BUTTON FUNCTION
-// ============================================
-function clearSearchInput() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-    }
-
-    if (clearBtn) {
-        clearBtn.classList.remove('has-text');
-    }
-
-    // Reset search and show all products
-    if (typeof searchSuggestions !== 'undefined' && searchSuggestions) {
-        searchSuggestions.classList.remove('active');
-    }
-    if (typeof displayedCount !== 'undefined') {
-        displayedCount = 8;
-    }
-    if (typeof renderProducts === 'function') {
-        renderProducts(currentFilter || 'all', '');
-    }
-}
-
-// Update clear button state based on input
-function updateClearButtonState() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    if (!searchInput || !clearBtn) return;
-
-    if (searchInput.value.trim().length > 0) {
-        clearBtn.classList.add('has-text');
-    } else {
-        clearBtn.classList.remove('has-text');
-    }
-}
-
-// Initialize clear button on page load
-function initClearButton() {
-    const searchInput = document.getElementById('searchInput');
-
-    if (searchInput) {
-        // Update on input
-        searchInput.addEventListener('input', updateClearButtonState);
-        searchInput.addEventListener('keyup', updateClearButtonState);
-        searchInput.addEventListener('focus', updateClearButtonState);
-
-        // Initial check
-        updateClearButtonState();
-    }
-}
-
-
 function formatPrice(price) {
     return parseFloat(price).toFixed(2);
 }
@@ -338,6 +319,10 @@ async function loadData() {
     } catch (err) {
         console.error("خطأ في تحميل البيانات:", err);
         showToast("خطأ في تحميل البيانات", true);
+    } finally {
+        // Mark data as loaded and check if we can hide splash
+        window.splashDataLoaded = true;
+        checkHideSplash();
     }
 }
 
@@ -620,68 +605,6 @@ function updateCartUI() {
 
 // ============================================
 // Helper Functions
-function formatPrice(price) {
-    return parseFloat(price).toFixed(2);
-}
-
-// ============================================
-// SEARCH CLEAR BUTTON FUNCTION
-// ============================================
-function clearSearchInput() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-    }
-
-    if (clearBtn) {
-        clearBtn.classList.remove('has-text');
-    }
-
-    // Reset search and show all products
-    if (typeof searchSuggestions !== 'undefined' && searchSuggestions) {
-        searchSuggestions.classList.remove('active');
-    }
-    if (typeof displayedCount !== 'undefined') {
-        displayedCount = 8;
-    }
-    if (typeof renderProducts === 'function') {
-        renderProducts(currentFilter || 'all', '');
-    }
-}
-
-// Update clear button state based on input
-function updateClearButtonState() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    if (!searchInput || !clearBtn) return;
-
-    if (searchInput.value.trim().length > 0) {
-        clearBtn.classList.add('has-text');
-    } else {
-        clearBtn.classList.remove('has-text');
-    }
-}
-
-// Initialize clear button on page load
-function initClearButton() {
-    const searchInput = document.getElementById('searchInput');
-
-    if (searchInput) {
-        // Update on input
-        searchInput.addEventListener('input', updateClearButtonState);
-        searchInput.addEventListener('keyup', updateClearButtonState);
-        searchInput.addEventListener('focus', updateClearButtonState);
-
-        // Initial check
-        updateClearButtonState();
-    }
-}
-
-
 // ============================================
 function getCategoryName(categoryId) {
     const cat = categories.find(c => c.id === categoryId);
@@ -1080,7 +1003,6 @@ window.closeOptionsModal = closeOptionsModal;
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     initSearchSuggestions();
-    initClearButton();
     loadCartFromLocal();
     loadCouponFromLocal();
     loadData();

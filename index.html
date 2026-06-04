@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <img src="logo-viola.jpg" alt="ڤيولا" class="splash-logo">
+            <h1 class="splash-title">ڤيولا</h1>
+            <p class="splash-subtitle">VIOLA STYLE</p>
+            <p class="splash-welcome">✨ أهلاً وسهلاً في متجر ڤيولا ✨</p>
+            <div class="splash-loader"></div>
+            <p class="splash-loading-text">جاري تحميل المتجر...</p>
+        </div>
+        <div class="splash-credit">
+             تم التصميم بواسطة <strong>أحمد كلاوي</strong> | Ahmad Kllawe 
+        </div>
+    </div>
+
+
     <!-- Header -->
     <header class="main-header">
         <div class="header-content container">
@@ -23,8 +39,7 @@
             </a>
 
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="ابحثي عن منتجك المفضل..." autocomplete="off">
-                <button class="search-clear-btn" id="clearSearchBtn" type="button" onclick="clearSearchInput()"><i class="fas fa-times"></i></button>
+                <input type="text" id="searchInput" placeholder="ابحثي عن منتجك المفضل...">
                 <button class="search-btn"><i class="fas fa-search"></i></button>
             </div>
 
