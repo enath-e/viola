@@ -239,6 +239,39 @@ async function loadData() {
         
         // إعداد المستمعات للتحديث التلقائي بعد التحميل الأولي
         setupRealtimeListeners();
+
+        // Check URL parameters for footer filter links
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParam = urlParams.get('filter');
+        if (filterParam === 'products') {
+            // Show all products
+            currentFilter = 'all';
+            displayedCount = 8;
+            renderProducts('all', '');
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(t => {
+                t.classList.remove('active');
+                if (t.dataset.filter === 'all') t.classList.add('active');
+            });
+            // Scroll to products section
+            setTimeout(() => {
+                const productsSection = document.querySelector('.products-section');
+                if (productsSection) productsSection.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        } else if (filterParam === 'offers') {
+            // Show only products with discount (oldprice exists)
+            currentFilter = 'offers';
+            displayedCount = 8;
+            renderProducts('offers', '');
+            // Update active tab - no tab will be active for offers
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            // Scroll to products section
+            setTimeout(() => {
+                const productsSection = document.querySelector('.products-section');
+                if (productsSection) productsSection.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+        
         
     } catch (err) {
         console.error("خطأ في تحميل البيانات:", err);
@@ -546,6 +579,9 @@ function renderProducts(filter = 'all', searchQuery = '', limit = displayedCount
         if (filter === 'new') {
             const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
             filtered = products.filter(p => p.createdAt && p.createdAt > weekAgo);
+        } else if (filter === 'offers') {
+            // Show only products with discount (oldprice exists and is greater than current price)
+            filtered = products.filter(p => p.oldprice && parseFloat(p.oldprice) > parseFloat(p.price));
         } else {
             filtered = products.filter(p => p.categoryId === filter);
         }

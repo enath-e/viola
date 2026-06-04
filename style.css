@@ -2395,3 +2395,62 @@ section {
     opacity: 1;
     visibility: visible;
 }
+/* ============================================
+   FOOTER LINKS - ENHANCED STYLES
+   ============================================ */
+
+.footer-col ul li a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-col ul li a:hover {
+    color: white;
+    padding-right: 5px;
+}
+
+.contact-info li a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+}
+
+.contact-info li a:hover {
+    color: white;
+}
+
+.contact-info li a i {
+    color: white;
+    width: 20px;
+}
+
+/* Quick links active/hover states */
+.footer-col ul li a[href^="index"],
+.footer-col ul li a[href^="about"],
+.footer-col ul li a[href^="category"] {
+    position: relative;
+}
+
+.footer-col ul li a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: 0;
+    width: 0;
+    height: 2px;
+    background: white;
+    transition: width 0.3s ease;
+}
+
+.footer-col ul li a:hover::after {
+    width: 100%;
+}
