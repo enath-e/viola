@@ -2257,7 +2257,7 @@ section {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        /* justify-content: center; */
+        /* justify-content: center;*/
         padding-bottom: 8px;
         max-width: 100%;
     }
@@ -2361,4 +2361,37 @@ section {
 .cart-footer.hidden,
 .cart-empty.hidden {
     display: none;
+}
+
+/* ============================================
+   TOAST - HIGHER Z-INDEX
+   ============================================ */
+
+.toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--gradient-primary);
+    color: white;
+    padding: 12px 24px;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 99999;  /* تم الرفع إلى أعلى قيمة */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    box-shadow: var(--shadow-lg);
+    white-space: nowrap;
+    direction: rtl;
+}
+
+.toast.active {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    visibility: visible;
 }
